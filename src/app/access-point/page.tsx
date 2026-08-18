@@ -20,6 +20,7 @@ export default function AccessPointPage() {
     type: "success" | "error" | null;
     message: string;
     studentName?: string;
+    courseName?: string;
     time?: string;
     checkType?: string;
   }>({ type: null, message: "" });
@@ -45,7 +46,7 @@ export default function AccessPointPage() {
         throw new Error("No se pudo capturar la imagen de la cámara");
       }
 
-      const res = await fetchApi<{ studentName: string; timestamp: string; type: string }>("/attendance/biometric", {
+      const res = await fetchApi<{ studentName: string; courseName?: string; timestamp: string; type: string }>("/attendance/biometric", {
         method: "POST",
         body: JSON.stringify({ image: imageSrc }),
       });
@@ -54,6 +55,7 @@ export default function AccessPointPage() {
         type: "success",
         message: "Asistencia registrada correctamente",
         studentName: res.studentName,
+        courseName: res.courseName,
         time: new Date(res.timestamp).toLocaleTimeString("es-PY"),
         checkType: res.type,
       });
@@ -138,6 +140,9 @@ export default function AccessPointPage() {
                   <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1 text-sm bg-black/20 p-2.5 rounded font-medium">
                     <p><span className="text-slate-400 text-xs">Alumno:</span><br/><strong>{alert.studentName}</strong></p>
                     <p><span className="text-slate-400 text-xs">Hora:</span><br/><strong>{alert.time}</strong></p>
+                    {alert.courseName && (
+                      <p className="col-span-2 mt-1"><span className="text-slate-400 text-xs">Curso / Clase:</span><br/><strong className="text-amber-300">{alert.courseName}</strong></p>
+                    )}
                     <p className="col-span-2 mt-1"><span className="text-slate-400 text-xs">Registro:</span><br/>
                       <span className={`inline-block px-2 py-0.5 text-xs font-bold rounded ${
                         alert.checkType === 'Entrada' ? 'bg-blue-500 text-white' : 'bg-orange-500 text-white'
