@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardHeader, CardContent, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { 
   ensureAuth, 
@@ -13,10 +14,12 @@ import {
   getCourses, 
   getAttendanceReports, 
   registerManualAttendance,
-  EvaluationStage, 
+  getAttendancesByDate,
+  deleteAttendance,
   IAcademicPeriod, 
   ICourse, 
-  IStudentReport 
+  IStudentReport,
+  IDailyAttendanceItem 
 } from "@/lib/api";
 import { 
   UserCheck, 
@@ -29,7 +32,10 @@ import {
   Award, 
   AlertTriangle,
   Clock,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Trash2,
+  CalendarDays,
+  Info
 } from "lucide-react";
 
 type Course = ICourse;
@@ -71,8 +77,18 @@ const sanitizeCsvCell = (val: string | number | undefined | null): string => {
   return `"${str}"`;
 };
 
+function getLocalTodayDate(): string {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 export default function AsistenciaReportesPage() {
   const currentYear = new Date().getFullYear();
+  const todayStr = getLocalTodayDate();
+
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [knownYears, setKnownYears] = useState<number[]>([
     currentYear - 1,
@@ -87,8 +103,11 @@ export default function AsistenciaReportesPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [dataError, setDataError] = useState<string | null>(null);
 
-  // Manual Attendance Modal State
+  // Manual Attendance Modal State (Pase de Lista por Fecha)
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [selectedClassDate, setSelectedClassDate] = useState<string>(todayStr);
+  const [dailyAttendances, setDailyAttendances] = useState<IDailyAttendanceItem[]>([]);
+  const [dailyLoading, setDailyLoading] = useState(false);
   const [manualLoading, setManualLoading] = useState(false);
   const [manualMessage, setManualMessage] = useState("");
   const [manualError, setManualError] = useState("");
@@ -162,7 +181,7 @@ export default function AsistenciaReportesPage() {
   }, [selectedYear]);
 
   // Load reports whenever course, period, or year changes
-  const loadReports = React.useCallback(
+  const loadReports = useCallback(
     async (courseId: string, period: string, year: number) => {
       if (!courseId) {
         setReports([]);
@@ -197,6 +216,33 @@ export default function AsistenciaReportesPage() {
       active = false;
     };
   }, [selectedCourse, selectedPeriod, selectedYear, loadReports]);
+
+  // Load daily attendances for a specific date in the modal
+  const loadDailyAttendances = useCallback(
+    async (courseId: string, date: string) => {
+      if (!courseId || !date) return;
+      setDailyLoading(true);
+      setManualError("");
+      try {
+        const data = await getAttendancesByDate(courseId, date);
+        setDailyAttendances(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setDailyAttendances([]);
+        const msg = err instanceof Error ? err.message : "Error al cargar la asistencia del día";
+        setManualError(msg);
+      } finally {
+        setDailyLoading(false);
+      }
+    },
+    []
+  );
+
+  // Trigger daily attendance load when date changes or modal opens
+  useEffect(() => {
+    if (isManualModalOpen && selectedCourse && selectedClassDate) {
+      loadDailyAttendances(selectedCourse, selectedClassDate);
+    }
+  }, [isManualModalOpen, selectedCourse, selectedClassDate, loadDailyAttendances]);
 
   // Filter courses by year if applicable, or show all
   const filteredCourses = useMemo(() => {
@@ -253,7 +299,8 @@ export default function AsistenciaReportesPage() {
   // Statistics summaries
   const currentCourseObj = courses.find((c) => c.id === selectedCourse);
   const classesHeldSummary = reports.length > 0 && reports[0].classesHeld !== undefined ? reports[0].classesHeld : 0;
-  
+  const classesScheduledSummary = reports.length > 0 && reports[0].classesScheduled !== undefined ? reports[0].classesScheduled : classesHeldSummary;
+
   const stats = useMemo(() => {
     if (reports.length === 0) {
       return { totalStudents: 0, averagePercentage: 0, regularCount: 0, alertCount: 0, irregularCount: 0 };
@@ -276,14 +323,15 @@ export default function AsistenciaReportesPage() {
     return { totalStudents, averagePercentage, regularCount, alertCount, irregularCount };
   }, [reports]);
 
-  // Manual Attendance Handlers
-  const handleRegisterManual = async (studentId: string, type: "Entrada" | "Salida", studentName: string) => {
+  // Manual Attendance Handlers (Contextualized by selectedClassDate)
+  const handleRegisterManualForDate = async (studentId: string, type: "Entrada" | "Salida", studentName: string) => {
     setManualLoading(true);
     setManualMessage("");
     setManualError("");
     try {
-      await registerManualAttendance(studentId, selectedCourse, type);
-      setManualMessage(`Asistencia registrada: ${studentName} (${type})`);
+      await registerManualAttendance(studentId, selectedCourse, type, selectedClassDate);
+      setManualMessage(`Asistencia registrada: ${studentName} para la fecha ${formatDateForDisplay(selectedClassDate)}`);
+      await loadDailyAttendances(selectedCourse, selectedClassDate);
       loadReports(selectedCourse, selectedPeriod, selectedYear);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al registrar asistencia";
@@ -293,20 +341,44 @@ export default function AsistenciaReportesPage() {
     }
   };
 
-  const handleRegisterAll = async (type: "Entrada" | "Salida") => {
-    if (reports.length === 0) return;
+  const handleDeleteAttendance = async (attendanceId: string, studentName: string) => {
+    const confirmed = window.confirm(`¿Está seguro de anular la asistencia de ${studentName} en la fecha ${formatDateForDisplay(selectedClassDate)}?`);
+    if (!confirmed) return;
+
+    setManualLoading(true);
+    setManualMessage("");
+    setManualError("");
+    try {
+      await deleteAttendance(attendanceId);
+      setManualMessage(`Asistencia anulada para ${studentName}`);
+      await loadDailyAttendances(selectedCourse, selectedClassDate);
+      loadReports(selectedCourse, selectedPeriod, selectedYear);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al anular la asistencia";
+      setManualError(msg);
+    } finally {
+      setManualLoading(false);
+    }
+  };
+
+  const handleRegisterAllForDate = async (type: "Entrada" | "Salida") => {
+    const absentStudents = dailyAttendances.filter((item) => !item.isPresent);
+    if (absentStudents.length === 0) {
+      setManualMessage(`Todas las alumnas ya tienen asistencia registrada para el día ${formatDateForDisplay(selectedClassDate)}.`);
+      return;
+    }
+
     setManualLoading(true);
     setManualMessage("");
     setManualError("");
 
     try {
-      // Process in batched chunks of 5 requests to prevent network/connection pool exhaustion
       const CHUNK_SIZE = 5;
       const results: PromiseSettledResult<void>[] = [];
-      for (let i = 0; i < reports.length; i += CHUNK_SIZE) {
-        const chunk = reports.slice(i, i + CHUNK_SIZE);
+      for (let i = 0; i < absentStudents.length; i += CHUNK_SIZE) {
+        const chunk = absentStudents.slice(i, i + CHUNK_SIZE);
         const chunkResults = await Promise.allSettled(
-          chunk.map((rep) => registerManualAttendance(rep.studentId, selectedCourse, type))
+          chunk.map((item) => registerManualAttendance(item.studentId, selectedCourse, type, selectedClassDate))
         );
         results.push(...chunkResults);
       }
@@ -315,14 +387,11 @@ export default function AsistenciaReportesPage() {
       const rejected = results.filter((r) => r.status === "rejected").length;
 
       if (rejected === 0) {
-        setManualMessage(
-          `Pase de lista masivo completado (${type} para los ${fulfilled} alumnos).`
-        );
+        setManualMessage(`Pase de lista completado para el día ${formatDateForDisplay(selectedClassDate)} (${fulfilled} alumnas marcadas).`);
       } else {
-        setManualError(
-          `Se registraron ${fulfilled} asistencias correctamente, pero fallaron ${rejected}.`
-        );
+        setManualError(`Se registraron ${fulfilled} asistencias correctamente, pero fallaron ${rejected}.`);
       }
+      await loadDailyAttendances(selectedCourse, selectedClassDate);
       loadReports(selectedCourse, selectedPeriod, selectedYear);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error durante el pase de lista masivo";
@@ -337,7 +406,7 @@ export default function AsistenciaReportesPage() {
     if (reports.length === 0) return;
 
     const courseLabel = currentCourseObj ? `${currentCourseObj.name} - ${currentCourseObj.level}` : "Curso";
-    const header = ["Estudiante", "Año Lectivo", "Etapa", "Clases Dictadas", "Asistencias (Entradas)", "Salidas", "Total Marcaciones", "Porcentaje Asistencia", "Regularidad"];
+    const header = ["Estudiante", "Año Lectivo", "Etapa", "Clases Dictadas (Efectivas)", "Clases Programadas", "Asistencias (Entradas)", "Salidas", "Total Marcaciones", "Porcentaje Asistencia", "Regularidad"];
     
     const rows = reports.map((r) => {
       const regularity = getStudentRegularity(r.percentage, r.regularity);
@@ -346,6 +415,7 @@ export default function AsistenciaReportesPage() {
         sanitizeCsvCell(selectedYear),
         sanitizeCsvCell(selectedPeriod),
         sanitizeCsvCell(r.classesHeld ?? classesHeldSummary),
+        sanitizeCsvCell(r.classesScheduled ?? classesScheduledSummary),
         sanitizeCsvCell(r.entradas),
         sanitizeCsvCell(r.salidas),
         sanitizeCsvCell(r.totalCheckins),
@@ -393,7 +463,7 @@ export default function AsistenciaReportesPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Panel de Asistencias</h1>
           <p className="text-sm text-muted-foreground">
-            Consulte porcentajes de asistencia y regularidad calculados dinámicamente según el calendario oficial por etapa.
+            Consulte porcentajes de asistencia y regularidad calculados sobre las clases dictadas efectivas de la etapa.
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
@@ -419,9 +489,9 @@ export default function AsistenciaReportesPage() {
               setManualMessage("");
               setManualError("");
             }}
-            className="flex items-center gap-2 bg-primary text-primary-foreground shadow-sm"
+            className="flex items-center gap-2 bg-primary text-primary-foreground shadow-sm font-semibold"
           >
-            <UserCheck className="h-4 w-4" /> Pase de Lista Manual
+            <UserCheck className="h-4 w-4" /> Pase de Lista por Fecha
           </Button>
         </div>
       </div>
@@ -522,10 +592,19 @@ export default function AsistenciaReportesPage() {
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 font-medium text-slate-700">
-                <span>Clases dictadas en este rango:</span>
-                <span className="px-2 py-0.5 bg-blue-50 text-blue-800 font-bold rounded border border-blue-200">
-                  {classesHeldSummary} clases
+              <div className="flex items-center gap-2 font-medium text-slate-700 flex-wrap">
+                <span className="flex items-center gap-1">
+                  Clases dictadas efectivas:
+                  <span className="px-2 py-0.5 bg-blue-50 text-blue-800 font-bold rounded border border-blue-200">
+                    {classesHeldSummary} clases
+                  </span>
+                </span>
+                <span className="text-slate-300">|</span>
+                <span className="flex items-center gap-1 text-slate-500">
+                  Programadas:
+                  <span className="px-2 py-0.5 bg-slate-100 text-slate-700 font-semibold rounded border border-slate-200">
+                    {classesScheduledSummary} clases
+                  </span>
                 </span>
               </div>
             </div>
@@ -630,7 +709,7 @@ export default function AsistenciaReportesPage() {
                       <TableCell className="text-center">
                         <span className="font-semibold text-slate-800">{rep.entradas}</span>
                         {rep.classesHeld !== undefined && rep.classesHeld > 0 && (
-                          <span className="text-xs text-muted-foreground ml-1">/ {rep.classesHeld}</span>
+                          <span className="text-xs text-muted-foreground ml-1">/ {rep.classesHeld} dictadas</span>
                         )}
                       </TableCell>
                       <TableCell className="text-center text-slate-600">
@@ -674,19 +753,19 @@ export default function AsistenciaReportesPage() {
         </CardContent>
       </Card>
 
-      {/* Manual Attendance Modal */}
+      {/* Pase de Lista por Fecha - Modal Docente */}
       {isManualModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-2xl shadow-2xl bg-white max-h-[90vh] flex flex-col">
+          <Card className="w-full max-w-3xl shadow-2xl bg-white max-h-[90vh] flex flex-col">
             <CardHeader className="border-b border-slate-100 pb-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl flex items-center gap-2">
+                  <CardTitle className="text-xl flex items-center gap-2 text-slate-800">
                     <UserCheck className="h-5 w-5 text-primary" />
-                    Pase de Lista Manual - Registro Docente
+                    Pase de Lista Docente por Fecha
                   </CardTitle>
                   <p className="text-xs text-muted-foreground mt-1">
-                    Modalidad: <span className="font-semibold text-slate-700">{currentCourseObj?.name} - {currentCourseObj?.level}</span> | Año: <span className="font-semibold text-slate-700">{selectedYear}</span>
+                    Modalidad: <span className="font-semibold text-slate-700">{currentCourseObj?.name} - {currentCourseObj?.level}</span>
                   </p>
                 </div>
                 <button 
@@ -699,89 +778,139 @@ export default function AsistenciaReportesPage() {
             </CardHeader>
 
             <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
-              {manualMessage && (
-                <div className="p-3 text-xs text-emerald-800 bg-emerald-100 rounded-lg border border-emerald-200 flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-                  <span>{manualMessage}</span>
+              {/* Date Selector Bar */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-5 w-5 text-primary shrink-0" />
+                  <Label htmlFor="class-date-input" className="text-xs font-bold text-slate-700 shrink-0">
+                    Fecha de la Clase:
+                  </Label>
+                  <Input
+                    id="class-date-input"
+                    type="date"
+                    value={selectedClassDate}
+                    onChange={(e) => setSelectedClassDate(e.target.value)}
+                    className="h-8 text-xs font-semibold bg-white w-40"
+                  />
+                  {selectedClassDate === todayStr && (
+                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      Hoy
+                    </span>
+                  )}
                 </div>
-              )}
-              {manualError && (
-                <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive flex items-center gap-2">
-                  <XCircle className="h-4 w-4 shrink-0 text-destructive" />
-                  <span>{manualError}</span>
-                </div>
-              )}
 
-              <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-200">
-                <span className="text-xs font-semibold text-slate-700">Acción Rápida Masiva:</span>
                 <div className="flex gap-2">
                   <Button
                     size="sm"
                     variant="outline"
                     className="text-xs flex items-center gap-1.5 text-emerald-700 border-emerald-300 hover:bg-emerald-50"
-                    disabled={manualLoading}
-                    onClick={() => handleRegisterAll("Entrada")}
+                    disabled={manualLoading || dailyLoading}
+                    onClick={() => handleRegisterAllForDate("Entrada")}
                   >
-                    <Users className="h-3.5 w-3.5" /> Marcar Entrada a Todos
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-xs flex items-center gap-1.5 text-blue-700 border-blue-300 hover:bg-blue-50"
-                    disabled={manualLoading}
-                    onClick={() => handleRegisterAll("Salida")}
-                  >
-                    <Users className="h-3.5 w-3.5" /> Marcar Salida a Todos
+                    <Users className="h-3.5 w-3.5" /> Marcar Entrada a Todos hoy
                   </Button>
                 </div>
               </div>
 
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Estudiante</TableHead>
-                    <TableHead>Asistencias Previas</TableHead>
-                    <TableHead className="text-right">Registrar Ahora</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reports.map((rep) => (
-                    <TableRow key={rep.studentId}>
-                      <TableCell className="font-semibold text-slate-800 text-sm">
-                        {rep.studentName}
-                      </TableCell>
-                      <TableCell className="text-xs text-muted-foreground">
-                        {rep.entradas} entradas / {rep.salidas} salidas
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 px-2.5 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800"
-                            disabled={manualLoading}
-                            onClick={() => handleRegisterManual(rep.studentId, "Entrada", rep.studentName)}
-                          >
-                            + Entrada
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="h-8 px-2.5 text-xs text-blue-700 border-blue-200 hover:bg-blue-50 hover:text-blue-800"
-                            disabled={manualLoading}
-                            onClick={() => handleRegisterManual(rep.studentId, "Salida", rep.studentName)}
-                          >
-                            + Salida
-                          </Button>
-                        </div>
-                      </TableCell>
+              {manualMessage && (
+                <div className="p-3 text-xs text-emerald-800 bg-emerald-100 rounded-lg border border-emerald-200 flex items-center gap-2 animate-in fade-in">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
+                  <span>{manualMessage}</span>
+                </div>
+              )}
+              {manualError && (
+                <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive flex items-center gap-2 animate-in fade-in">
+                  <XCircle className="h-4 w-4 shrink-0 text-destructive" />
+                  <span>{manualError}</span>
+                </div>
+              )}
+
+              {/* Attendance Table by Date */}
+              {dailyLoading ? (
+                <div className="text-center py-8 text-slate-500 flex flex-col items-center justify-center space-y-2">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                  <p className="text-xs font-medium">Cargando estado del día {formatDateForDisplay(selectedClassDate)}...</p>
+                </div>
+              ) : dailyAttendances.length === 0 ? (
+                <div className="text-center py-8 text-slate-500 text-xs">
+                  No hay alumnas matriculadas activas en este curso.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-slate-50/70">
+                      <TableHead className="font-semibold text-slate-700">Estudiante</TableHead>
+                      <TableHead className="font-semibold text-slate-700">C.I.</TableHead>
+                      <TableHead className="text-center font-semibold text-slate-700">Estado el {formatDateForDisplay(selectedClassDate)}</TableHead>
+                      <TableHead className="text-right font-semibold text-slate-700">Acción</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {dailyAttendances.map((item) => (
+                      <TableRow key={item.studentId} className="hover:bg-slate-50/50">
+                        <TableCell className="font-semibold text-slate-800 text-sm">
+                          {item.studentName}
+                        </TableCell>
+                        <TableCell className="text-xs text-slate-500 font-mono">
+                          {item.ci}
+                        </TableCell>
+                        <TableCell className="text-center">
+                          {item.isPresent ? (
+                            <div className="inline-flex flex-col items-center">
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                Presente ({item.type})
+                              </span>
+                              {item.timestamp && (
+                                <span className="text-[10px] text-slate-500 mt-0.5">
+                                  {new Date(item.timestamp).toLocaleTimeString("es-PY", { hour: "2-digit", minute: "2-digit" })} | {item.method || "Manual"}
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                              <XCircle className="h-3 w-3 text-red-500" />
+                              Ausente
+                            </span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            {item.isPresent && item.attendanceId ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2.5 text-xs text-red-700 border-red-200 hover:bg-red-50 hover:text-red-800 flex items-center gap-1"
+                                disabled={manualLoading}
+                                onClick={() => handleDeleteAttendance(item.attendanceId!, item.studentName)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" /> Anular Asistencia
+                              </Button>
+                            ) : (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-8 px-2.5 text-xs text-emerald-700 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-800 flex items-center gap-1"
+                                disabled={manualLoading}
+                                onClick={() => handleRegisterManualForDate(item.studentId, "Entrada", item.studentName)}
+                              >
+                                <CheckCircle2 className="h-3.5 w-3.5" /> + Marcar Presente
+                              </Button>
+                            )}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
 
-            <div className="border-t border-slate-100 p-4 flex justify-end">
+            <div className="border-t border-slate-100 p-4 flex justify-between items-center bg-slate-50/50">
+              <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                <Info className="h-4 w-4 text-primary" />
+                <span>Las modificaciones por fecha recalculan automáticamente la regularidad de la etapa.</span>
+              </div>
               <Button 
                 variant="outline" 
                 onClick={() => setIsManualModalOpen(false)}

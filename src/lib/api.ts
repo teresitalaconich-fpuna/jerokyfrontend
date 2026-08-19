@@ -188,10 +188,22 @@ export interface IStudentReport {
   salidas: number;
   percentage: number;
   classesHeld?: number;
+  classesScheduled?: number;
   regularity?: 'REGULAR' | 'EN ALERTA' | 'IRREGULAR';
   presentCount?: number;
   absentCount?: number;
   status?: string;
+}
+
+export interface IDailyAttendanceItem {
+  studentId: string;
+  studentName: string;
+  ci: string;
+  isPresent: boolean;
+  attendanceId: string | null;
+  timestamp: string | null;
+  type: 'Entrada' | 'Salida' | null;
+  method: string | null;
 }
 
 export async function getCourses(): Promise<ICourse[]> {
@@ -213,11 +225,46 @@ export async function registerManualAttendance(
   studentId: string,
   courseId: string,
   type: 'Entrada' | 'Salida',
+  timestamp?: string,
 ): Promise<void> {
   return fetchApi('/attendance/manual', {
     method: 'POST',
-    body: JSON.stringify({ studentId, courseId, type }),
+    body: JSON.stringify({ studentId, courseId, type, timestamp }),
   });
 }
+
+export async function registerDocumentAttendance(
+  ci: string,
+  type?: 'Entrada' | 'Salida',
+  courseId?: string,
+): Promise<{
+  success: boolean;
+  message: string;
+  studentName: string;
+  courseName?: string;
+  courseId: string | null;
+  timestamp: string;
+  type: 'Entrada' | 'Salida';
+}> {
+  return fetchApi('/attendance/document', {
+    method: 'POST',
+    body: JSON.stringify({ ci, type, courseId }),
+  });
+}
+
+export async function getAttendancesByDate(
+  courseId: string,
+  date: string,
+): Promise<IDailyAttendanceItem[]> {
+  const params = new URLSearchParams({ courseId, date });
+  return fetchApi<IDailyAttendanceItem[]>(`/attendance/by-date?${params.toString()}`);
+}
+
+export async function deleteAttendance(id: string): Promise<{ success: boolean; message: string }> {
+  return fetchApi<{ success: boolean; message: string }>(`/attendance/${id}`, {
+    method: 'DELETE',
+  });
+}
+
 
 
