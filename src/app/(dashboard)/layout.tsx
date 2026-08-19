@@ -32,7 +32,6 @@ interface SidebarItem {
 
 const navigation: SidebarItem[] = [
   { name: "Alumnos", href: "/alumnos", icon: Users, roles: ['Administrator', 'Docente', 'Operador'] },
-  { name: "Nuevo Registro", href: "/alumnos/nuevo", icon: UserCheck, roles: ['Administrator', 'Operador'] },
   { name: "Oferta Académica", href: "/oferta-academica", icon: BookOpen, roles: ['Administrator', 'Operador', 'Docente'] },
   { name: "Calendario Académico", href: "/admin/calendario", icon: Calendar, roles: ['Administrator', 'Operador'] },
   { name: "Matrículas", href: "/matriculas", icon: GraduationCap, roles: ['Administrator', 'Operador'] },

@@ -103,9 +103,11 @@ export default function CalendarioPage() {
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
   const [knownYears, setKnownYears] = useState<number[]>([
+    currentYear - 2,
     currentYear - 1,
     currentYear,
     currentYear + 1,
+    currentYear + 2,
   ]);
   const [periods, setPeriods] = useState<IAcademicPeriod[]>([]);
   const [loading, setLoading] = useState(true);
@@ -128,10 +130,6 @@ export default function CalendarioPage() {
   const [editEndDate, setEditEndDate] = useState("");
   const [editLoading, setEditLoading] = useState(false);
 
-  // Custom Year Modal State
-  const [isCustomYearOpen, setIsCustomYearOpen] = useState(false);
-  const [customYearInput, setCustomYearInput] = useState(String(currentYear));
-
   // Deleting State (tracking ID being deleted)
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
@@ -141,7 +139,7 @@ export default function CalendarioPage() {
       await ensureAuth();
       const years = await getAcademicYears();
       if (Array.isArray(years) && years.length > 0) {
-        const set = new Set([...years, currentYear - 1, currentYear, currentYear + 1]);
+        const set = new Set([...years, currentYear - 2, currentYear - 1, currentYear, currentYear + 1, currentYear + 2]);
         setKnownYears(Array.from(set).sort((a, b) => a - b));
       }
     } catch {
@@ -338,24 +336,7 @@ export default function CalendarioPage() {
     }
   };
 
-  // Jump to custom year
-  const handleApplyCustomYear = (e: React.FormEvent) => {
-    e.preventDefault();
-    const y = parseInt(customYearInput, 10);
-    if (isNaN(y) || y < 2000 || y > 2100) {
-      setErrorMessage("Ingrese un año válido entre 2000 y 2100.");
-      return;
-    }
 
-    setSelectedYear(y);
-    setKnownYears((prev) => {
-      if (!prev.includes(y)) {
-        return [...prev, y].sort((a, b) => a - b);
-      }
-      return prev;
-    });
-    setIsCustomYearOpen(false);
-  };
 
   // Period Status calculation
   const getPeriodStatus = (startDate: string, endDate: string) => {
@@ -451,14 +432,36 @@ export default function CalendarioPage() {
           </div>
         </div>
 
-        {/* Action Controls: Year navigation + Create Period Button */}
+        {/* Action Controls: Modern Year navigation & Quick Pills + Create Period Button */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Step navigation */}
-          <div className="flex items-center bg-slate-100 p-1 rounded-lg border border-slate-200">
+          {/* Quick Year Pills */}
+          <div className="hidden sm:flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
+            {[currentYear - 1, currentYear, currentYear + 1, currentYear + 2].map((yr) => {
+              const isSelected = selectedYear === yr;
+              return (
+                <button
+                  key={yr}
+                  type="button"
+                  onClick={() => setSelectedYear(yr)}
+                  className={`px-2.5 py-1 text-xs rounded-md font-semibold transition-all ${
+                    isSelected
+                      ? "bg-white text-primary shadow-xs border border-slate-200"
+                      : "text-slate-600 hover:text-slate-900 hover:bg-slate-200/60"
+                  }`}
+                >
+                  {yr}
+                  {yr === currentYear && " ★"}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Stepper navigation with clean Select */}
+          <div className="flex items-center bg-white border border-slate-200 rounded-lg shadow-xs overflow-hidden">
             <button
               onClick={() => setSelectedYear((prev) => prev - 1)}
               title="Año anterior"
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded transition-colors"
+              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors border-r border-slate-200"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -467,44 +470,23 @@ export default function CalendarioPage() {
               id="year-select"
               value={String(selectedYear)}
               onChange={(e) => setSelectedYear(parseInt(e.target.value, 10))}
-              className="h-8 text-xs font-bold bg-transparent border-0 shadow-none text-slate-800 focus:ring-0 w-36 cursor-pointer"
+              className="h-9 text-xs font-bold border-0 shadow-none text-slate-800 focus:ring-0 w-32 cursor-pointer bg-white px-2"
             >
-              {knownYears.map((y) => {
-                let note = "";
-                if (y === currentYear) note = " (Actual)";
-                else if (y < currentYear) note = " (Histórico)";
-                else note = " (Futuro)";
-
-                return (
-                  <option key={y} value={y}>
-                    Año {y}
-                    {note}
-                  </option>
-                );
-              })}
+              {knownYears.map((y) => (
+                <option key={y} value={y}>
+                  Año {y} {y === currentYear ? "(Actual)" : y < currentYear ? "(Histórico)" : "(Futuro)"}
+                </option>
+              ))}
             </Select>
 
             <button
               onClick={() => setSelectedYear((prev) => prev + 1)}
               title="Año siguiente"
-              className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-white rounded transition-colors"
+              className="p-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50 transition-colors border-l border-slate-200"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
-
-          {/* Jump to other year */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setCustomYearInput(String(selectedYear));
-              setIsCustomYearOpen(true);
-            }}
-            className="h-9 text-xs text-slate-700 border-slate-200 hover:bg-slate-50 font-medium"
-          >
-            Otro Año...
-          </Button>
 
           {/* Create Period Button */}
           <Button
@@ -549,7 +531,7 @@ export default function CalendarioPage() {
       )}
 
       {/* Year Overview Stats Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <Card className="p-4 bg-white border border-slate-200 shadow-sm flex items-center gap-3">
           <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg">
             <Calendar className="h-5 w-5" />
@@ -568,18 +550,6 @@ export default function CalendarioPage() {
             <p className="text-xs text-muted-foreground font-medium">Períodos Registrados</p>
             <p className="text-base font-bold text-slate-800">
               {periods.length} {periods.length === 1 ? "período definido" : "períodos definidos"}
-            </p>
-          </div>
-        </Card>
-
-        <Card className="p-4 bg-white border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg">
-            <Clock className="h-5 w-5" />
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground font-medium">Uso en el Sistema</p>
-            <p className="text-xs font-semibold text-slate-700">
-              Filtro temporal para asistencias y calificaciones
             </p>
           </div>
         </Card>
@@ -875,52 +845,6 @@ export default function CalendarioPage() {
                 className="text-xs font-semibold"
               >
                 {editLoading ? "Guardando..." : "Guardar Cambios"}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* JUMP TO CUSTOM YEAR DIALOG */}
-      <Dialog open={isCustomYearOpen} onOpenChange={setIsCustomYearOpen}>
-        <DialogContent className="sm:max-w-xs">
-          <form onSubmit={handleApplyCustomYear} className="space-y-4">
-            <DialogHeader>
-              <DialogTitle className="text-base font-bold text-slate-800">
-                Ir a un Año Específico
-              </DialogTitle>
-              <DialogDescription className="text-xs text-muted-foreground">
-                Consulte o planifique períodos para cualquier ciclo lectivo.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="space-y-1.5">
-              <Label htmlFor="custom-year-input" className="text-xs font-semibold text-slate-700">
-                Año (2000 - 2100):
-              </Label>
-              <Input
-                id="custom-year-input"
-                type="number"
-                min={2000}
-                max={2100}
-                value={customYearInput}
-                onChange={(e) => setCustomYearInput(e.target.value)}
-                className="text-sm font-bold text-center"
-                autoFocus
-              />
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsCustomYearOpen(false)}
-                className="text-xs"
-              >
-                Cancelar
-              </Button>
-              <Button type="submit" className="text-xs font-semibold">
-                Navegar al Año
               </Button>
             </DialogFooter>
           </form>

@@ -16,7 +16,7 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { fetchApi, ensureAuth } from "../../../lib/api";
-import { Plus, Search, Eye, Edit, Power, X } from "lucide-react";
+import { Plus, Search, FileText, Edit, Power, X, User, Phone, ShieldCheck } from "lucide-react";
 
 interface StudentData {
   id: string;
@@ -38,6 +38,19 @@ interface StudentData {
   } | null;
 }
 
+function calculateAge(birthDateStr?: string): number | null {
+  if (!birthDateStr) return null;
+  const birthDate = new Date(birthDateStr);
+  if (isNaN(birthDate.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+    age--;
+  }
+  return age;
+}
+
 export default function AlumnosPage() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [search, setSearch] = useState("");
@@ -51,6 +64,15 @@ export default function AlumnosPage() {
   const [editBirthDate, setEditBirthDate] = useState("");
   const [editMedicalInfo, setEditMedicalInfo] = useState("");
   const [editBiometricConsent, setEditBiometricConsent] = useState(false);
+
+  // Tutor edit state
+  const [editHasTutor, setEditHasTutor] = useState(false);
+  const [editTutorFirstName, setEditTutorFirstName] = useState("");
+  const [editTutorLastName, setEditTutorLastName] = useState("");
+  const [editTutorCi, setEditTutorCi] = useState("");
+  const [editTutorPhone, setEditTutorPhone] = useState("");
+  const [editTutorEmail, setEditTutorEmail] = useState("");
+
   const [editLoading, setEditLoading] = useState(false);
   const [editError, setEditError] = useState("");
 
@@ -87,6 +109,23 @@ export default function AlumnosPage() {
     setEditBirthDate(student.birthDate ? student.birthDate.split("T")[0] : "");
     setEditMedicalInfo(student.encryptedMedicalInfo || "");
     setEditBiometricConsent(Boolean(student.biometricConsent));
+
+    if (student.tutor) {
+      setEditHasTutor(true);
+      setEditTutorFirstName(student.tutor.firstName || "");
+      setEditTutorLastName(student.tutor.lastName || "");
+      setEditTutorCi(student.tutor.ci || "");
+      setEditTutorPhone(student.tutor.phone || "");
+      setEditTutorEmail(student.tutor.email || "");
+    } else {
+      setEditHasTutor(false);
+      setEditTutorFirstName("");
+      setEditTutorLastName("");
+      setEditTutorCi("");
+      setEditTutorPhone("");
+      setEditTutorEmail("");
+    }
+
     setEditError("");
   };
 
@@ -95,28 +134,57 @@ export default function AlumnosPage() {
     if (!editingStudent) return;
 
     if (!editFirstName || !editLastName || !editCi || !editBirthDate) {
-      setEditError("Por favor complete todos los campos obligatorios");
+      setEditError("Por favor complete todos los campos obligatorios del alumno");
       return;
+    }
+
+    const studentAge = calculateAge(editBirthDate);
+    const isMinor = studentAge !== null && studentAge < 18;
+
+    if (isMinor && !editHasTutor) {
+      setEditError("El alumno es menor de edad y requiere obligatoriamente tener un tutor legal registrado");
+      return;
+    }
+
+    if (editHasTutor) {
+      if (!editTutorFirstName || !editTutorLastName || !editTutorCi || !editTutorPhone) {
+        setEditError("Por favor complete los datos obligatorios del tutor (Nombre, Apellido, CI y Teléfono)");
+        return;
+      }
     }
 
     setEditLoading(true);
     setEditError("");
 
     try {
+      const payload: Record<string, unknown> = {
+        firstName: editFirstName,
+        lastName: editLastName,
+        ci: editCi,
+        birthDate: editBirthDate,
+        encryptedMedicalInfo: editMedicalInfo || undefined,
+        biometricConsent: editBiometricConsent,
+      };
+
+      if (editHasTutor) {
+        payload.tutor = {
+          firstName: editTutorFirstName,
+          lastName: editTutorLastName,
+          ci: editTutorCi,
+          phone: editTutorPhone,
+          email: editTutorEmail || `${editTutorCi}@tutor.com`,
+        };
+      } else {
+        payload.tutor = null;
+      }
+
       await fetchApi(`/students/${editingStudent.id}`, {
         method: "PATCH",
-        body: JSON.stringify({
-          firstName: editFirstName,
-          lastName: editLastName,
-          ci: editCi,
-          birthDate: editBirthDate,
-          encryptedMedicalInfo: editMedicalInfo || undefined,
-          biometricConsent: editBiometricConsent,
-        }),
+        body: JSON.stringify(payload),
       });
 
+      await loadStudents();
       setEditingStudent(null);
-      loadStudents();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al actualizar alumno";
       setEditError(msg);
@@ -151,15 +219,18 @@ export default function AlumnosPage() {
     return fullName.includes(search.toLowerCase()) || ciMatch;
   });
 
+  const editingAge = calculateAge(editBirthDate);
+  const editingIsMinor = editingAge !== null && editingAge < 18;
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Alumnos</h1>
-          <p className="text-sm text-muted-foreground">Listado y gestión integral de alumnos registrados en el sistema.</p>
+          <p className="text-sm text-muted-foreground">Listado y gestión integral de alumnos registrados en la academia.</p>
         </div>
         <Link href="/alumnos/nuevo">
-          <Button className="flex items-center gap-2">
+          <Button className="flex items-center gap-2 font-semibold shadow-sm">
             <Plus className="h-4 w-4" /> Nuevo Alumno
           </Button>
         </Link>
@@ -192,8 +263,7 @@ export default function AlumnosPage() {
                   <TableHead>Cédula (CI)</TableHead>
                   <TableHead>Fecha de Nacimiento</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Biometría</TableHead>
-                  <TableHead>Tutor Vinculado</TableHead>
+                  <TableHead>Tutor / Responsable Legal</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
               </TableHeader>
@@ -208,46 +278,45 @@ export default function AlumnosPage() {
                       <TableCell>{student.ci}</TableCell>
                       <TableCell>{new Date(student.birthDate).toLocaleDateString("es-PY")}</TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                           isActive ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
                         }`}>
                           {isActive ? "Activo" : "Inactivo"}
                         </span>
                       </TableCell>
                       <TableCell>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                          student.biometricTemplateId 
-                            ? "bg-emerald-100 text-emerald-800" 
-                            : student.biometricConsent 
-                              ? "bg-amber-100 text-amber-800" 
-                              : "bg-slate-100 text-slate-800"
-                        }`}>
-                          {student.biometricTemplateId ? "Enrolado" : student.biometricConsent ? "Consentimiento dado" : "Sin consentimiento"}
-                        </span>
-                      </TableCell>
-                      <TableCell>
                         {student.tutor ? (
-                          <div>
-                            <p className="text-sm font-medium">{student.tutor.firstName} {student.tutor.lastName}</p>
-                            <p className="text-xs text-muted-foreground">{student.tutor.phone}</p>
+                          <div className="space-y-0.5">
+                            <p className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
+                              <User className="h-3.5 w-3.5 text-primary" />
+                              {student.tutor.firstName} {student.tutor.lastName}
+                            </p>
+                            <div className="text-xs text-muted-foreground flex items-center gap-2">
+                              {student.tutor.ci && <span>CI: {student.tutor.ci}</span>}
+                              {student.tutor.phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="h-3 w-3" /> {student.tutor.phone}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         ) : (
-                          <span className="text-xs text-muted-foreground">Mayor de edad / Sin tutor</span>
+                          <span className="text-xs text-muted-foreground italic">Mayor de edad / Sin tutor</span>
                         )}
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1.5">
                           <Link href={`/historial/${student.id}`}>
-                            <Button size="sm" variant="outline" className="h-8 px-2 flex items-center gap-1 text-xs" title="Ver Historial de Calificaciones">
-                              <Eye className="h-3.5 w-3.5" /> Historial
+                            <Button size="sm" variant="outline" className="h-8 px-2.5 flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white" title="Ver Ficha y Legajo Académico">
+                              <FileText className="h-3.5 w-3.5 text-primary" /> Ver Ficha
                             </Button>
                           </Link>
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            className="h-8 px-2 flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                            className="h-8 px-2.5 flex items-center gap-1 text-xs font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                             onClick={() => handleOpenEdit(student)}
-                            title="Editar Datos del Alumno"
+                            title="Editar Datos del Alumno y Tutor"
                           >
                             <Edit className="h-3.5 w-3.5" /> Editar
                           </Button>
@@ -275,91 +344,195 @@ export default function AlumnosPage() {
 
       {/* Edit Student Modal */}
       {editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-lg shadow-2xl bg-white">
-            <CardHeader>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <Card className="w-full max-w-xl shadow-2xl bg-white my-8 max-h-[90vh] flex flex-col">
+            <CardHeader className="border-b border-slate-100 pb-4">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">Editar Información del Alumno</CardTitle>
+                <div>
+                  <CardTitle className="text-xl font-bold text-slate-800">Editar Datos del Alumno</CardTitle>
+                  <p className="text-xs text-muted-foreground mt-0.5">Modifique la información personal y los datos del tutor legal.</p>
+                </div>
                 <button 
                   onClick={() => setEditingStudent(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </CardHeader>
-            <form onSubmit={handleSaveEdit}>
-              <CardContent className="space-y-4">
+            <form onSubmit={handleSaveEdit} className="overflow-y-auto flex-1">
+              <CardContent className="space-y-5 p-6">
                 {editError && (
-                  <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive">
+                  <div className="p-3 text-xs text-destructive bg-destructive/10 rounded-lg border border-destructive/20 font-medium">
                     {editError}
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="editFirstName">Nombre *</Label>
-                    <Input
-                      id="editFirstName"
-                      value={editFirstName}
-                      onChange={(e) => setEditFirstName(e.target.value)}
-                      required
-                    />
+                {/* Section 1: Student Personal Information */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5" /> Datos Personales del Alumno
+                  </h4>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="editFirstName" className="text-xs font-semibold">Nombre *</Label>
+                      <Input
+                        id="editFirstName"
+                        value={editFirstName}
+                        onChange={(e) => setEditFirstName(e.target.value)}
+                        required
+                        className="text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="editLastName" className="text-xs font-semibold">Apellido *</Label>
+                      <Input
+                        id="editLastName"
+                        value={editLastName}
+                        onChange={(e) => setEditLastName(e.target.value)}
+                        required
+                        className="text-xs"
+                      />
+                    </div>
                   </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-1">
+                      <Label htmlFor="editCi" className="text-xs font-semibold">Cédula de Identidad (CI) *</Label>
+                      <Input
+                        id="editCi"
+                        value={editCi}
+                        onChange={(e) => setEditCi(e.target.value)}
+                        required
+                        className="text-xs"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <Label htmlFor="editBirthDate" className="text-xs font-semibold">
+                        Fecha de Nacimiento * {editingAge !== null && `(${editingAge} años)`}
+                      </Label>
+                      <Input
+                        id="editBirthDate"
+                        type="date"
+                        value={editBirthDate}
+                        onChange={(e) => setEditBirthDate(e.target.value)}
+                        required
+                        className="text-xs"
+                      />
+                    </div>
+                  </div>
+
                   <div className="space-y-1">
-                    <Label htmlFor="editLastName">Apellido *</Label>
-                    <Input
-                      id="editLastName"
-                      value={editLastName}
-                      onChange={(e) => setEditLastName(e.target.value)}
-                      required
+                    <Label htmlFor="editMedical" className="text-xs font-semibold">Información Médica / Alergias (Cifrada)</Label>
+                    <textarea
+                      id="editMedical"
+                      value={editMedicalInfo}
+                      onChange={(e) => setEditMedicalInfo(e.target.value)}
+                      placeholder="Observaciones médicas o alergias..."
+                      className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="editCi">Cédula de Identidad *</Label>
-                    <Input
-                      id="editCi"
-                      value={editCi}
-                      onChange={(e) => setEditCi(e.target.value)}
-                      required
-                    />
+                {/* Section 2: Tutor Information */}
+                <div className="pt-3 border-t border-slate-200 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
+                      <ShieldCheck className="h-3.5 w-3.5" /> Datos del Tutor / Responsable Legal
+                    </h4>
+                    {editingIsMinor ? (
+                      <span className="text-[11px] font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded-full">
+                        Obligatorio (Menor de edad)
+                      </span>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <Checkbox
+                          id="editHasTutorCheck"
+                          checked={editHasTutor}
+                          onChange={(e) => setEditHasTutor(e.target.checked)}
+                        />
+                        <label htmlFor="editHasTutorCheck" className="text-xs text-slate-700 font-medium cursor-pointer">
+                          Asignar tutor
+                        </label>
+                      </div>
+                    )}
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="editBirthDate">Fecha de Nacimiento *</Label>
-                    <Input
-                      id="editBirthDate"
-                      type="date"
-                      value={editBirthDate}
-                      onChange={(e) => setEditBirthDate(e.target.value)}
-                      required
-                    />
-                  </div>
+
+                  {(editHasTutor || editingIsMinor) && (
+                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 animate-in fade-in">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="editTutorFirstName" className="text-xs font-semibold">Nombre del Tutor *</Label>
+                          <Input
+                            id="editTutorFirstName"
+                            value={editTutorFirstName}
+                            onChange={(e) => setEditTutorFirstName(e.target.value)}
+                            required={editingIsMinor || editHasTutor}
+                            className="text-xs bg-white"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="editTutorLastName" className="text-xs font-semibold">Apellido del Tutor *</Label>
+                          <Input
+                            id="editTutorLastName"
+                            value={editTutorLastName}
+                            onChange={(e) => setEditTutorLastName(e.target.value)}
+                            required={editingIsMinor || editHasTutor}
+                            className="text-xs bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <Label htmlFor="editTutorCi" className="text-xs font-semibold">Cédula del Tutor (CI) *</Label>
+                          <Input
+                            id="editTutorCi"
+                            value={editTutorCi}
+                            onChange={(e) => setEditTutorCi(e.target.value)}
+                            required={editingIsMinor || editHasTutor}
+                            className="text-xs bg-white"
+                          />
+                        </div>
+                        <div className="space-y-1">
+                          <Label htmlFor="editTutorPhone" className="text-xs font-semibold">Teléfono / Celular *</Label>
+                          <Input
+                            id="editTutorPhone"
+                            value={editTutorPhone}
+                            onChange={(e) => setEditTutorPhone(e.target.value)}
+                            required={editingIsMinor || editHasTutor}
+                            placeholder="Ej. 0981234567"
+                            className="text-xs bg-white"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <Label htmlFor="editTutorEmail" className="text-xs font-semibold">Correo Electrónico</Label>
+                        <Input
+                          id="editTutorEmail"
+                          type="email"
+                          value={editTutorEmail}
+                          onChange={(e) => setEditTutorEmail(e.target.value)}
+                          placeholder="tutor@ejemplo.com"
+                          className="text-xs bg-white"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="editMedical">Información Médica / Alergias (Cifrada)</Label>
-                  <textarea
-                    id="editMedical"
-                    value={editMedicalInfo}
-                    onChange={(e) => setEditMedicalInfo(e.target.value)}
-                    placeholder="Observaciones médicas..."
-                    className="flex min-h-[70px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  />
-                </div>
-
-                <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                {/* Section 3: Biometric Consent */}
+                <div className="flex items-start gap-3 p-3 bg-amber-50/80 border border-amber-200 rounded-lg">
                   <Checkbox
                     id="editBiometricConsent"
                     checked={editBiometricConsent}
                     onChange={(e) => setEditBiometricConsent(e.target.checked)}
-                    className="mt-1"
+                    className="mt-0.5"
                   />
-                  <div className="space-y-1">
+                  <div className="space-y-0.5">
                     <label htmlFor="editBiometricConsent" className="text-xs font-bold text-amber-900 cursor-pointer block leading-snug">
-                      Consentimiento de Biometría Facial Aprobado
+                      Consentimiento de Biometría Facial
                     </label>
                     <p className="text-[10px] text-amber-800 leading-normal">
                       Autorización formal del alumno o tutor legal para el procesamiento biométrico en los accesos.
@@ -367,11 +540,11 @@ export default function AlumnosPage() {
                   </div>
                 </div>
               </CardContent>
-              <div className="flex justify-end gap-2 p-6 pt-0">
-                <Button type="button" variant="outline" onClick={() => setEditingStudent(null)}>
+              <div className="flex justify-end gap-2 p-6 pt-0 border-t border-slate-100 bg-slate-50/50">
+                <Button type="button" variant="outline" onClick={() => setEditingStudent(null)} className="text-xs">
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={editLoading}>
+                <Button type="submit" disabled={editLoading} className="text-xs font-semibold">
                   {editLoading ? "Guardando..." : "Guardar Cambios"}
                 </Button>
               </div>
@@ -382,3 +555,4 @@ export default function AlumnosPage() {
     </div>
   );
 }
+

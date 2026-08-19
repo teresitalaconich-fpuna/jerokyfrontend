@@ -304,7 +304,7 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
             onClick={handlePrint}
             className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-white font-semibold shadow"
           >
-            <FileDown className="h-4 w-4" /> Imprimir / Exportar Boletín Oficial
+            <FileDown className="h-4 w-4" /> Imprimir / Exportar Ficha Académica
           </Button>
         </div>
       </div>
@@ -326,12 +326,12 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
                   </div>
                 </div>
                 <p className="text-[11px] text-slate-500 font-medium mt-1">
-                  Habilitado por Resolución MEC N° 22.393/2019 • Asunción, Paraguay
+                  Academia Integral de Danzas • Asunción, Paraguay
                 </p>
               </div>
               <div className="text-left sm:text-right border-l-2 sm:border-l-0 pl-3 sm:pl-0 border-primary">
                 <span className="inline-block px-3 py-1 bg-primary/10 text-primary font-bold text-xs rounded-md uppercase tracking-wider mb-1">
-                  Boletín Oficial de Calificaciones y Legajo
+                  Ficha y Legajo Académico
                 </span>
                 <p className="text-xs text-muted-foreground font-semibold">
                   Fecha de Emisión: {new Date().toLocaleDateString("es-PY", { year: "numeric", month: "long", day: "numeric" })}
@@ -485,7 +485,7 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
                           <TableHead className="font-bold text-slate-700 text-center">Expresión (0-100)</TableHead>
                           <TableHead className="font-bold text-slate-700 text-center">Disciplina (0-100)</TableHead>
                           <TableHead className="font-bold text-slate-700 text-right">Promedio</TableHead>
-                          <TableHead className="font-bold text-slate-700 text-center">Escala MEC</TableHead>
+                          <TableHead className="font-bold text-slate-700 text-center">Escala Conceptual</TableHead>
                           <TableHead className="font-bold text-slate-700 text-right">Condición</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -551,16 +551,16 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
                 </div>
                 <div className="border-t-2 border-slate-800 pt-2">
                   <p className="font-bold text-xs text-slate-900">Secretaría Académica / Dirección General</p>
-                  <p className="text-[10px] text-slate-600">Visto Bueno MEC • Supervisión Pedagógica</p>
+                  <p className="text-[10px] text-slate-600">Centro de Danzas Jeroky Paraguay</p>
                 </div>
               </div>
 
               <div className="flex flex-col sm:flex-row items-center justify-between text-xs text-muted-foreground gap-2 pt-2">
                 <p className="font-semibold text-center sm:text-left">
-                  Documento oficial emitido por el Sistema Jeroky Soft bajo los lineamientos de la Resolución MEC N° 22.393/2019.
+                  Documento oficial emitido por el Sistema Jeroky Soft - Centro de Danzas.
                 </p>
                 <div className="flex items-center gap-1.5 font-bold text-emerald-700 shrink-0">
-                  <CheckCircle2 className="h-4 w-4" /> Válido para trámites oficiales MEC
+                  <CheckCircle2 className="h-4 w-4" /> Registro Académico Institucional
                 </div>
               </div>
             </div>

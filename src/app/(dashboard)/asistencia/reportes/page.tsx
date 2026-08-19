@@ -410,7 +410,11 @@ export default function AsistenciaReportesPage() {
     
     const rows = reports.map((r) => {
       const regularity = getStudentRegularity(r.percentage, r.regularity);
-      const attended = r.attendedClasses ?? r.presentCount ?? Math.min(r.entradas, r.classesHeld ?? r.entradas);
+      const attended = r.attendedClasses ?? (
+        r.classesHeld !== undefined && r.classesHeld > 0
+          ? Math.min(r.presentCount ?? r.entradas, r.classesHeld)
+          : (r.presentCount ?? r.entradas)
+      );
       return [
         sanitizeCsvCell(r.studentName),
         sanitizeCsvCell(selectedYear),
@@ -590,7 +594,7 @@ export default function AsistenciaReportesPage() {
                   </span>
                 ) : (
                   <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-700">
-                    Calendario Estándar MEC
+                    Calendario Estándar
                   </span>
                 )}
               </div>
@@ -641,7 +645,7 @@ export default function AsistenciaReportesPage() {
               <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             </div>
             <div className="mt-2 text-2xl font-bold text-emerald-700">{stats.regularCount}</div>
-            <p className="text-[11px] text-emerald-600 mt-0.5">Habilitadas a examen</p>
+            <p className="text-[11px] text-emerald-600 mt-0.5">Regulares</p>
           </Card>
 
           <Card className="p-4 bg-white border-slate-200">
@@ -702,7 +706,11 @@ export default function AsistenciaReportesPage() {
                   const regularityLabel = getStudentRegularity(rep.percentage, rep.regularity);
                   const isRegular = regularityLabel === "REGULAR";
                   const isAlert = regularityLabel === "EN ALERTA";
-                  const effectiveAttended = rep.attendedClasses ?? rep.presentCount ?? Math.min(rep.entradas, rep.classesHeld ?? rep.entradas);
+                  const effectiveAttended = rep.attendedClasses ?? (
+                    rep.classesHeld !== undefined && rep.classesHeld > 0
+                      ? Math.min(rep.presentCount ?? rep.entradas, rep.classesHeld)
+                      : (rep.presentCount ?? rep.entradas)
+                  );
 
                   return (
                     <TableRow key={rep.studentId} className="hover:bg-slate-50/50 transition-colors">

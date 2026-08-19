@@ -19,7 +19,7 @@ import {
   CheckCircle,
   X,
   User,
-  ShoppingBag,
+  Layers,
   Calendar,
   MapPin,
   Check,
@@ -162,10 +162,10 @@ export default function MatriculasPage() {
     if (!selectedStudent) return;
     if (cart.find(item => item.id === course.id)) return;
 
-    // Check duplicate modality (course.name) in the cart itself for the same year
+    // Check duplicate modality (course.name) in the selected list for the same year
     const duplicateModalityInCart = cart.find(item => item.name === course.name && item.year === course.year);
     if (duplicateModalityInCart) {
-      setErrorMsg(`Ya has seleccionado una clase de la modalidad "${course.name}" (${course.year}) en tu resumen.`);
+      setErrorMsg(`Ya has seleccionado una clase de la modalidad "${course.name}" (${course.year}) en tu selección de matrícula.`);
       return;
     }
 
@@ -451,17 +451,17 @@ export default function MatriculasPage() {
           <Card className="border border-slate-200 shadow-md rounded-xl overflow-hidden">
             <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
               <CardTitle className="text-slate-800 text-base flex items-center gap-2">
-                <ShoppingBag className="h-5 w-5 text-primary" /> Paso 3: Resumen y Confirmación
+                <Layers className="h-5 w-5 text-primary" /> Paso 3: Resumen y Confirmación
               </CardTitle>
-              <CardDescription>Clases seleccionadas para registrar en lote.</CardDescription>
+              <CardDescription>Clases y modalidades seleccionadas para la matrícula.</CardDescription>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
 
               {cart.length === 0 ? (
                 <div className="p-8 border border-dashed border-slate-200 text-center rounded-xl text-xs text-muted-foreground space-y-1 bg-slate-50/30">
-                  <ShoppingBag className="h-8 w-8 text-slate-300 mx-auto" />
-                  <p className="font-bold text-slate-500">Su carrito está vacío</p>
-                  <p>Agregue clases de la grilla de la derecha</p>
+                  <Layers className="h-8 w-8 text-slate-300 mx-auto" />
+                  <p className="font-bold text-slate-500">No hay clases seleccionadas</p>
+                  <p>Agregue clases desde la oferta académica a la derecha</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-56 overflow-y-auto">
