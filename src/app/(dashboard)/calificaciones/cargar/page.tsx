@@ -20,6 +20,7 @@ interface Course {
   id: string;
   name: string;
   level: string;
+  year?: number;
 }
 
 interface GradeRow {
@@ -31,6 +32,13 @@ interface GradeRow {
   average: number;
 }
 
+const EVALUATION_STAGES = [
+  "1ª Etapa",
+  "2ª Etapa",
+  "Examen Final",
+  "Recuperatorio",
+];
+
 const mockStudents = [
   { id: "s1", firstName: "Sofía", lastName: "Ayala" },
   { id: "s2", firstName: "Mateo", lastName: "Paredes" },
@@ -38,14 +46,14 @@ const mockStudents = [
 ];
 
 const mockCourses = [
-  { id: "c1", name: "Ballet Clásico", level: "Nivel Intermedio" },
-  { id: "c2", name: "Ballet Clásico", level: "Nivel Avanzado" },
+  { id: "c1", name: "Ballet Clásico", level: "Nivel Intermedio", year: 2026 },
+  { id: "c2", name: "Ballet Clásico", level: "Nivel Avanzado", year: 2026 },
 ];
 
 export default function CargarCalificacionesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedCourse, setSelectedCourse] = useState("c1");
-  const [period, setPeriod] = useState("2026-I");
+  const [selectedStage, setSelectedStage] = useState<string>("1ª Etapa");
   const [students, setStudents] = useState<Student[]>([]);
   const [rows, setRows] = useState<GradeRow[]>([]);
 
@@ -145,7 +153,7 @@ export default function CargarCalificacionesPage() {
         techniqueScore: parseInt(r.technique) || 0,
         expressionScore: parseInt(r.expression) || 0,
         disciplineScore: parseInt(r.discipline) || 0,
-        period: period,
+        stage: selectedStage,
       }));
 
       await fetchApi("/grades/batch", {
@@ -153,9 +161,9 @@ export default function CargarCalificacionesPage() {
         body: JSON.stringify({ grades: gradesPayload }),
       });
 
-      setSuccess("Calificaciones guardadas exitosamente.");
+      setSuccess(`Calificaciones de la "${selectedStage}" guardadas exitosamente.`);
     } catch {
-      setSuccess("Guardado exitoso (Simulado localmente)");
+      setSuccess(`Guardado exitoso de la "${selectedStage}" (Simulado localmente)`);
     } finally {
       setLoading(false);
     }
@@ -166,7 +174,7 @@ export default function CargarCalificacionesPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold text-slate-800">Cargar Calificaciones</h1>
-          <p className="text-sm text-muted-foreground">Panel docente para la carga digital de notas académicas por periodo.</p>
+          <p className="text-sm text-muted-foreground">Panel docente para la carga digital de notas académicas por etapa evaluativa.</p>
         </div>
         <Button onClick={handleSave} disabled={loading} className="flex items-center gap-2">
           <Save className="h-4 w-4" /> {loading ? "Guardando..." : "Guardar Calificaciones"}
@@ -190,14 +198,20 @@ export default function CargarCalificacionesPage() {
                 })));
               }}>
                 {courses.map(c => (
-                  <option key={c.id} value={c.id}>{c.name} - {c.level}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name} - {c.level} {c.year ? `(Año ${c.year})` : ""}
+                  </option>
                 ))}
               </Select>
             </div>
 
             <div className="space-y-1">
-              <Label>Periodo Activo</Label>
-              <Input value={period} onChange={(e) => setPeriod(e.target.value)} />
+              <Label>Etapa de Evaluación</Label>
+              <Select value={selectedStage} onChange={(e) => setSelectedStage(e.target.value)}>
+                {EVALUATION_STAGES.map((st) => (
+                  <option key={st} value={st}>{st}</option>
+                ))}
+              </Select>
             </div>
           </div>
         </CardHeader>

@@ -72,7 +72,6 @@ interface Enrollment {
   id: string;
   studentId: string;
   courseId: string;
-  academicPeriod: string;
   status: string; // active, inactive, transferred
   student: Student;
   course: Course;
@@ -100,12 +99,10 @@ export default function MatriculasPage() {
 
   // Cart selection state
   const [cart, setCart] = useState<Course[]>([]);
-  const [period, setPeriod] = useState("2026-I");
 
   // Transfer modal state
   const [enrollmentToTransfer, setEnrollmentToTransfer] = useState<Enrollment | null>(null);
   const [transferCourseId, setTransferCourseId] = useState("");
-  const [transferPeriod, setTransferPeriod] = useState("2026-I");
   const [modalLoading, setModalLoading] = useState(false);
 
   // Receipt Modal state
@@ -162,18 +159,18 @@ export default function MatriculasPage() {
     if (!selectedStudent) return;
     if (cart.find(item => item.id === course.id)) return;
 
-    // Check duplicate modality (course.name) in the cart itself
-    const duplicateModalityInCart = cart.find(item => item.name === course.name);
+    // Check duplicate modality (course.name) in the cart itself for the same year
+    const duplicateModalityInCart = cart.find(item => item.name === course.name && item.year === course.year);
     if (duplicateModalityInCart) {
-      setErrorMsg(`Ya has seleccionado una clase de la modalidad "${course.name}" en tu resumen.`);
+      setErrorMsg(`Ya has seleccionado una clase de la modalidad "${course.name}" (${course.year}) en tu resumen.`);
       return;
     }
 
-    // Check duplicate modality in active student enrollments
+    // Check duplicate modality in active student enrollments for the same year
     const activeStudentEnrollments = enrollments.filter(e => e.studentId === selectedStudent.id && e.status === "active");
-    const duplicateModalityInEnrollments = activeStudentEnrollments.find(e => e.course?.name === course.name);
+    const duplicateModalityInEnrollments = activeStudentEnrollments.find(e => e.course?.name === course.name && e.course?.year === course.year);
     if (duplicateModalityInEnrollments) {
-      setErrorMsg(`El alumno ya se encuentra matriculado de forma activa en la modalidad "${course.name}".`);
+      setErrorMsg(`El alumno ya se encuentra matriculado de forma activa en la modalidad "${course.name}" para el año lectivo ${course.year}.`);
       return;
     }
 
@@ -188,7 +185,7 @@ export default function MatriculasPage() {
 
   // Confirm and checkout enrollments
   const handleCheckoutEnrollment = async () => {
-    if (!selectedStudent || cart.length === 0 || !period) {
+    if (!selectedStudent || cart.length === 0) {
       setErrorMsg("Debe seleccionar un alumno y al menos un curso");
       return;
     }
@@ -208,7 +205,6 @@ export default function MatriculasPage() {
           body: JSON.stringify({
             studentId: selectedStudent.id,
             courseId: course.id,
-            academicPeriod: period,
           }),
         });
         successfulEnrollments.push(res);
@@ -265,7 +261,7 @@ export default function MatriculasPage() {
   // Process course transfer
   const handleProcessTransfer = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!enrollmentToTransfer || !transferCourseId || !transferPeriod) {
+    if (!enrollmentToTransfer || !transferCourseId) {
       setErrorMsg("Debe seleccionar un curso de destino");
       return;
     }
@@ -280,7 +276,6 @@ export default function MatriculasPage() {
         body: JSON.stringify({
           enrollmentId: enrollmentToTransfer.id,
           targetCourseId: transferCourseId,
-          academicPeriod: transferPeriod,
         }),
       });
 
@@ -436,8 +431,8 @@ export default function MatriculasPage() {
                           .filter(e => e.studentId === selectedStudent.id && e.status === "active")
                           .map(e => (
                             <div key={e.id} className="flex justify-between items-center text-[10px] bg-white border border-slate-100 p-1.5 rounded">
-                              <span className="font-bold text-slate-700">{e.course.name} ({e.course.level})</span>
-                              <span className="text-[9px] font-bold text-primary">{e.academicPeriod}</span>
+                              <span className="font-bold text-slate-700">{e.course?.name} ({e.course?.level})</span>
+                              <span className="text-[9px] font-bold text-primary">Año {e.course?.year}</span>
                             </div>
                           ))
                         }
@@ -458,16 +453,6 @@ export default function MatriculasPage() {
               <CardDescription>Clases seleccionadas para registrar en lote.</CardDescription>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="period">Periodo de Matrícula *</Label>
-                <Input
-                  id="period"
-                  value={period}
-                  onChange={(e) => setPeriod(e.target.value)}
-                  placeholder="Ej: 2026-I"
-                  required
-                />
-              </div>
 
               {cart.length === 0 ? (
                 <div className="p-8 border border-dashed border-slate-200 text-center rounded-xl text-xs text-muted-foreground space-y-1 bg-slate-50/30">
@@ -646,7 +631,7 @@ export default function MatriculasPage() {
                   <TableHead className="font-bold text-slate-700">Modalidad / Nivel</TableHead>
                   <TableHead className="font-bold text-slate-700">Horario</TableHead>
                   <TableHead className="font-bold text-slate-700">Aula</TableHead>
-                  <TableHead className="font-bold text-slate-700">Periodo</TableHead>
+                  <TableHead className="font-bold text-slate-700">Año Lectivo</TableHead>
                   <TableHead className="font-bold text-slate-700">Estado</TableHead>
                   <TableHead className="text-right font-bold text-slate-700 pr-6">Acciones</TableHead>
                 </TableRow>
@@ -672,7 +657,7 @@ export default function MatriculasPage() {
                         <div key={idx}>{s.classroom}</div>
                       ))}
                     </TableCell>
-                    <TableCell className="font-bold text-slate-700">{log.academicPeriod}</TableCell>
+                    <TableCell className="font-bold text-slate-700">{log.course?.year}</TableCell>
                     <TableCell>
                       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
                         log.status === "active" 
@@ -704,7 +689,6 @@ export default function MatriculasPage() {
                               onClick={() => {
                                 setErrorMsg("");
                                 setTransferCourseId(courses[0]?.id || "");
-                                setTransferPeriod(log.academicPeriod);
                                 setEnrollmentToTransfer(log);
                               }}
                               size="sm"
@@ -759,7 +743,7 @@ export default function MatriculasPage() {
 
               <div className="p-3 bg-amber-50 text-xs text-amber-800 rounded-lg border border-amber-100 space-y-1">
                 <p className="font-bold">Curso Actual:</p>
-                <p>{enrollmentToTransfer.course.name} ({enrollmentToTransfer.course.level})</p>
+                <p>{enrollmentToTransfer.course.name} ({enrollmentToTransfer.course.level}) - Año {enrollmentToTransfer.course.year}</p>
                 <div className="text-slate-500 font-semibold space-y-0.5 mt-1">
                   {enrollmentToTransfer.course.schedules?.map((s, idx) => (
                     <div key={idx}>
@@ -777,20 +761,10 @@ export default function MatriculasPage() {
                       .filter(c => c.id !== enrollmentToTransfer.courseId)
                       .map(c => (
                         <option key={c.id} value={c.id}>
-                          {c.name} ({c.level}) - {formatCourseSchedules(c)}
+                          {c.name} ({c.level}) - Año {c.year} - {formatCourseSchedules(c)}
                         </option>
                       ))}
                   </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="transferPeriod">Periodo Académico *</Label>
-                  <Input
-                    id="transferPeriod"
-                    value={transferPeriod}
-                    onChange={(e) => setTransferPeriod(e.target.value)}
-                    required
-                  />
                 </div>
 
                 <DialogFooter>
@@ -878,8 +852,8 @@ export default function MatriculasPage() {
                     </p>
                   </div>
                   <div>
-                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Periodo Académico</p>
-                    <p className="font-semibold text-slate-800">{receiptEnrollment.academicPeriod}</p>
+                    <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider">Año Lectivo</p>
+                    <p className="font-semibold text-slate-800">{receiptEnrollment.course.year}</p>
                   </div>
                 </div>
 
@@ -936,7 +910,7 @@ export default function MatriculasPage() {
                   <p className="text-[10px] text-muted-foreground pt-1.5">
                     Alumno: <strong>{bulkReceiptEnrollments[0].student.firstName} {bulkReceiptEnrollments[0].student.lastName}</strong>
                   </p>
-                  <p className="text-[10px] text-muted-foreground">CI N°: <strong>{bulkReceiptEnrollments[0].student.ci}</strong> | Periodo: <strong>{bulkReceiptEnrollments[0].academicPeriod}</strong></p>
+                  <p className="text-[10px] text-muted-foreground">CI N°: <strong>{bulkReceiptEnrollments[0].student.ci}</strong> | Año Lectivo: <strong>{bulkReceiptEnrollments[0].course?.year || new Date().getFullYear()}</strong></p>
                 </div>
 
                 <hr className="border-slate-100" />

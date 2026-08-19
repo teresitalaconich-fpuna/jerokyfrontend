@@ -38,7 +38,7 @@ export default function AsistenciaReportesPage() {
   const [courses, setCourses] = useState<Course[]>([]);
   const [reports, setReports] = useState<StudentReport[]>([]);
   const [selectedCourse, setSelectedCourse] = useState("c1");
-  const [selectedPeriod, setSelectedPeriod] = useState("2026-I");
+  const [selectedPeriod, setSelectedPeriod] = useState("2026");
   const [loading, setLoading] = useState(false);
 
   const loadData = React.useCallback(async () => {
@@ -109,10 +109,10 @@ export default function AsistenciaReportesPage() {
             </div>
 
             <div className="space-y-1">
-              <Label>Periodo Académico</Label>
+              <Label>Año / Ciclo</Label>
               <Select value={selectedPeriod} onChange={(e) => setSelectedPeriod(e.target.value)}>
-                <option value="2026-I">Periodo 2026 - I</option>
-                <option value="2026-II">Periodo 2026 - II</option>
+                <option value="2026">Año Lectivo 2026</option>
+                <option value="2025">Año Lectivo 2025</option>
               </Select>
             </div>
           </div>

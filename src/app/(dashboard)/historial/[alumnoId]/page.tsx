@@ -14,10 +14,11 @@ interface GradeRecord {
   expressionScore: number;
   disciplineScore: number;
   average: number;
-  period: string;
+  stage: string;
   course: {
     name: string;
     level: string;
+    year?: number;
   };
 }
 
@@ -42,8 +43,8 @@ const mockGrades: GradeRecord[] = [
     expressionScore: 95,
     disciplineScore: 92,
     average: 92.33,
-    period: "2025-I",
-    course: { name: "Ballet Clásico", level: "Nivel Principiante" }
+    stage: "1ª Etapa",
+    course: { name: "Ballet Clásico", level: "Nivel Principiante", year: 2026 }
   },
   {
     id: "g2",
@@ -51,8 +52,8 @@ const mockGrades: GradeRecord[] = [
     expressionScore: 96,
     disciplineScore: 94,
     average: 94,
-    period: "2025-II",
-    course: { name: "Ballet Clásico", level: "Nivel Intermedio" }
+    stage: "2ª Etapa",
+    course: { name: "Ballet Clásico", level: "Nivel Principiante", year: 2026 }
   }
 ];
 
@@ -150,11 +151,12 @@ export default function HistorialAlumnoPage() {
                 <TableRow>
                   <TableHead>Modalidad / Curso</TableHead>
                   <TableHead>Nivel</TableHead>
-                  <TableHead>Periodo</TableHead>
+                  <TableHead>Año Lectivo</TableHead>
+                  <TableHead>Etapa</TableHead>
                   <TableHead>Técnica</TableHead>
                   <TableHead>Expresión</TableHead>
                   <TableHead>Disciplina</TableHead>
-                  <TableHead className="text-right">Promedio Final</TableHead>
+                  <TableHead className="text-right">Promedio</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -162,7 +164,12 @@ export default function HistorialAlumnoPage() {
                   <TableRow key={grade.id}>
                     <TableCell className="font-semibold text-slate-800">{grade.course?.name}</TableCell>
                     <TableCell>{grade.course?.level}</TableCell>
-                    <TableCell>{grade.period}</TableCell>
+                    <TableCell className="font-semibold text-slate-700">{grade.course?.year || "—"}</TableCell>
+                    <TableCell>
+                      <span className="inline-block px-2 py-0.5 bg-primary/10 text-primary font-bold text-xs rounded">
+                        {grade.stage}
+                      </span>
+                    </TableCell>
                     <TableCell>{grade.techniqueScore}</TableCell>
                     <TableCell>{grade.expressionScore}</TableCell>
                     <TableCell>{grade.disciplineScore}</TableCell>
