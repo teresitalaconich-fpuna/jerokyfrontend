@@ -190,6 +190,7 @@ export interface IStudentReport {
   classesHeld?: number;
   classesScheduled?: number;
   regularity?: 'REGULAR' | 'EN ALERTA' | 'IRREGULAR';
+  attendedClasses?: number;
   presentCount?: number;
   absentCount?: number;
   status?: string;

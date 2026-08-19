@@ -406,16 +406,18 @@ export default function AsistenciaReportesPage() {
     if (reports.length === 0) return;
 
     const courseLabel = currentCourseObj ? `${currentCourseObj.name} - ${currentCourseObj.level}` : "Curso";
-    const header = ["Estudiante", "Año Lectivo", "Etapa", "Clases Dictadas (Efectivas)", "Clases Programadas", "Asistencias (Entradas)", "Salidas", "Total Marcaciones", "Porcentaje Asistencia", "Regularidad"];
+    const header = ["Estudiante", "Año Lectivo", "Etapa", "Clases Dictadas (Efectivas)", "Clases Programadas", "Clases Asistidas", "Entradas (Check-in)", "Salidas (Check-out)", "Total Marcaciones", "Porcentaje Asistencia", "Regularidad"];
     
     const rows = reports.map((r) => {
       const regularity = getStudentRegularity(r.percentage, r.regularity);
+      const attended = r.attendedClasses ?? r.presentCount ?? Math.min(r.entradas, r.classesHeld ?? r.entradas);
       return [
         sanitizeCsvCell(r.studentName),
         sanitizeCsvCell(selectedYear),
         sanitizeCsvCell(selectedPeriod),
         sanitizeCsvCell(r.classesHeld ?? classesHeldSummary),
         sanitizeCsvCell(r.classesScheduled ?? classesScheduledSummary),
+        sanitizeCsvCell(attended),
         sanitizeCsvCell(r.entradas),
         sanitizeCsvCell(r.salidas),
         sanitizeCsvCell(r.totalCheckins),
@@ -688,7 +690,7 @@ export default function AsistenciaReportesPage() {
               <TableHeader>
                 <TableRow className="bg-slate-50/70">
                   <TableHead className="font-semibold text-slate-700">Alumna</TableHead>
-                  <TableHead className="text-center font-semibold text-slate-700">Clases Asistidas (Entradas)</TableHead>
+                  <TableHead className="text-center font-semibold text-slate-700">Clases Asistidas</TableHead>
                   <TableHead className="text-center font-semibold text-slate-700">Salidas (Check-out)</TableHead>
                   <TableHead className="text-center font-semibold text-slate-700">Total Marcaciones</TableHead>
                   <TableHead className="font-semibold text-slate-700">Cumplimiento (%)</TableHead>
@@ -700,6 +702,7 @@ export default function AsistenciaReportesPage() {
                   const regularityLabel = getStudentRegularity(rep.percentage, rep.regularity);
                   const isRegular = regularityLabel === "REGULAR";
                   const isAlert = regularityLabel === "EN ALERTA";
+                  const effectiveAttended = rep.attendedClasses ?? rep.presentCount ?? Math.min(rep.entradas, rep.classesHeld ?? rep.entradas);
 
                   return (
                     <TableRow key={rep.studentId} className="hover:bg-slate-50/50 transition-colors">
@@ -707,9 +710,14 @@ export default function AsistenciaReportesPage() {
                         {rep.studentName}
                       </TableCell>
                       <TableCell className="text-center">
-                        <span className="font-semibold text-slate-800">{rep.entradas}</span>
+                        <span className="font-semibold text-slate-800">{effectiveAttended}</span>
                         {rep.classesHeld !== undefined && rep.classesHeld > 0 && (
                           <span className="text-xs text-muted-foreground ml-1">/ {rep.classesHeld} dictadas</span>
+                        )}
+                        {rep.entradas > effectiveAttended && (
+                          <span className="block text-[10px] text-muted-foreground">
+                            ({rep.entradas} entradas reg.)
+                          </span>
                         )}
                       </TableCell>
                       <TableCell className="text-center text-slate-600">
