@@ -20,7 +20,7 @@ export default function LoginPage() {
 
   useEffect(() => {
     if (!loading && user) {
-      const hasAccess = ["Administrator", "Director", "Docente", "Operador"].includes(user.role);
+      const hasAccess = ["Administrator", "Docente", "Operador"].includes(user.role);
       if (hasAccess) {
         router.push("/alumnos");
       } else {
@@ -62,7 +62,7 @@ export default function LoginPage() {
   };
 
   // Mostrar indicador de carga mientras comprobamos sesión o si hay un usuario válido redirigiendo
-  if (loading || (user && ["Administrator", "Director", "Docente", "Operador"].includes(user.role))) {
+  if (loading || (user && ["Administrator", "Docente", "Operador"].includes(user.role))) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center space-y-3">

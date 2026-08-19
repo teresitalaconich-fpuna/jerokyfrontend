@@ -152,7 +152,7 @@ export default function OfertaAcademicaPage() {
 
       setCourses(loadedCourses);
       const filteredTeachers = loadedUsers.filter(
-        (u) => u.role === "Docente" || u.role === "Administrator" || u.role === "Director"
+        (u) => u.role === "Docente" || u.role === "Administrator"
       );
       setTeachers(filteredTeachers);
       if (filteredTeachers.length > 0 && !selectedTeacherId) {

@@ -5,55 +5,49 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "../..
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
+import { Select } from "../../../components/ui/select";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../../components/ui/table";
 import { fetchApi, ensureAuth } from "../../../lib/api";
 import { Send, Check } from "lucide-react";
+
+interface Course {
+  id: string;
+  name: string;
+  level: string;
+}
 
 interface CommLog {
   id: string;
   sentAt: string;
   channel: string;
   status: string;
-  recipient: {
+  recipientEmail?: string;
+  recipientName?: string;
+  recipientRole?: string;
+  recipient?: {
     email: string;
     role: string;
-  };
-  communication: {
+    firstName?: string;
+    lastName?: string;
+  } | null;
+  communication?: {
     subject: string;
   };
 }
 
-const mockLogs: CommLog[] = [
-  {
-    id: "l1",
-    sentAt: "2026-05-24T12:30:00Z",
-    channel: "Email",
-    status: "delivered",
-    recipient: { email: "director@jeroky.com", role: "Director" },
-    communication: { subject: "Reunión de Cierre del Primer Periodo" }
-  },
-  {
-    id: "l2",
-    sentAt: "2026-05-24T12:30:00Z",
-    channel: "Web",
-    status: "delivered",
-    recipient: { email: "director@jeroky.com", role: "Director" },
-    communication: { subject: "Reunión de Cierre del Primer Periodo" }
-  }
-];
-
 export default function ComunicacionesPage() {
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedCourse, setSelectedCourse] = useState("");
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
   
   // Target Audience roles
   const [targetAdmin, setTargetAdmin] = useState(false);
-  const [targetDirector, setTargetDirector] = useState(true);
-  const [targetDocente, setTargetDocente] = useState(true);
+  const [targetDocente, setTargetDocente] = useState(false);
   const [targetOperador, setTargetOperador] = useState(false);
   const [targetAlumno, setTargetAlumno] = useState(false);
-  const [targetTutor, setTargetTutor] = useState(false);
+  const [targetTutor, setTargetTutor] = useState(true);
 
   // Channels
   const [channelWeb, setChannelWeb] = useState(true);
@@ -64,13 +58,17 @@ export default function ComunicacionesPage() {
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
-  const loadLogs = React.useCallback(async () => {
+  const loadData = React.useCallback(async () => {
     try {
       await ensureAuth();
-      const data = await fetchApi<CommLog[]>("/communications/logs");
-      setLogs(data.length > 0 ? data : mockLogs);
+      const [loadedCourses, loadedLogs] = await Promise.all([
+        fetchApi<Course[]>("/courses").catch(() => []),
+        fetchApi<CommLog[]>("/communications/logs").catch(() => []),
+      ]);
+      setCourses(Array.isArray(loadedCourses) ? loadedCourses : []);
+      setLogs(Array.isArray(loadedLogs) ? loadedLogs : []);
     } catch {
-      setLogs(mockLogs);
+      setLogs([]);
     }
   }, []);
 
@@ -78,13 +76,13 @@ export default function ComunicacionesPage() {
     let active = true;
     Promise.resolve().then(() => {
       if (active) {
-        loadLogs();
+        loadData();
       }
     });
     return () => {
       active = false;
     };
-  }, [loadLogs]);
+  }, [loadData]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -106,7 +104,6 @@ export default function ComunicacionesPage() {
 
     const targetRoles: string[] = [];
     if (targetAdmin) targetRoles.push("Administrator");
-    if (targetDirector) targetRoles.push("Director");
     if (targetDocente) targetRoles.push("Docente");
     if (targetOperador) targetRoles.push("Operador");
     if (targetAlumno) targetRoles.push("Alumno");
@@ -138,32 +135,17 @@ export default function ComunicacionesPage() {
           body,
           targetRoles,
           channels,
+          courseId: selectedCourse || undefined,
         }),
       });
 
-      setSuccess("Mensaje enviado correctamente.");
+      setSuccess("Comunicado emitido y registrado exitosamente.");
       setSubject("");
       setBody("");
-      loadLogs();
-    } catch {
-      setSuccess("Mensaje emitido (Simulado localmente)");
-      // Mock log insert
-      const newMockLogs: CommLog[] = [];
-      targetRoles.forEach(role => {
-        channels.forEach(ch => {
-          newMockLogs.push({
-            id: `log-${Date.now()}-${role}-${ch}`,
-            sentAt: new Date().toISOString(),
-            channel: ch,
-            status: "delivered",
-            recipient: { email: `${role.toLowerCase()}@jeroky.com`, role: role },
-            communication: { subject: subject }
-          });
-        });
-      });
-      setLogs(prev => [...newMockLogs, ...prev]);
-      setSubject("");
-      setBody("");
+      loadData();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al emitir comunicado";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -176,7 +158,7 @@ export default function ComunicacionesPage() {
         <CardHeader>
           <CardTitle>Enviar Comunicado</CardTitle>
           <CardDescription>
-            Difusión masiva segmentada por roles y canales.
+            Difusión masiva segmentada por roles, cursos y canales oficiales.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSend}>
@@ -193,6 +175,16 @@ export default function ComunicacionesPage() {
             )}
 
             <div className="space-y-1">
+              <Label>Segmentar por Curso / Modalidad</Label>
+              <Select value={selectedCourse} onChange={(e) => setSelectedCourse(e.target.value)}>
+                <option value="">Todos los Cursos (General)</option>
+                {courses.map(c => (
+                  <option key={c.id} value={c.id}>{c.name} - {c.level}</option>
+                ))}
+              </Select>
+            </div>
+
+            <div className="space-y-1">
               <div className="flex justify-between">
                 <Label htmlFor="subject">Asunto *</Label>
                 <span className="text-[10px] text-muted-foreground">{subject.length}/250</span>
@@ -201,7 +193,7 @@ export default function ComunicacionesPage() {
                 id="subject"
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="Ej. Cambio de horario Ballet Avanzado"
+                placeholder="Ej. Convocatoria a Ensayo General"
                 maxLength={250}
               />
             </div>
@@ -226,28 +218,24 @@ export default function ComunicacionesPage() {
               <Label>Audiencia Objetivo *</Label>
               <div className="grid grid-cols-2 gap-2 p-3 bg-slate-50 border border-slate-200 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <Checkbox id="role-director" checked={targetDirector} onChange={(e) => setTargetDirector(e.target.checked)} />
-                  <label htmlFor="role-director" className="text-xs font-semibold cursor-pointer">Director</label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox id="role-docente" checked={targetDocente} onChange={(e) => setTargetDocente(e.target.checked)} />
-                  <label htmlFor="role-docente" className="text-xs font-semibold cursor-pointer">Docente</label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Checkbox id="role-operador" checked={targetOperador} onChange={(e) => setTargetOperador(e.target.checked)} />
-                  <label htmlFor="role-operador" className="text-xs font-semibold cursor-pointer">Operador</label>
+                  <Checkbox id="role-tutor" checked={targetTutor} onChange={(e) => setTargetTutor(e.target.checked)} />
+                  <label htmlFor="role-tutor" className="text-xs font-semibold cursor-pointer">Tutores (Padres)</label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox id="role-alumno" checked={targetAlumno} onChange={(e) => setTargetAlumno(e.target.checked)} />
-                  <label htmlFor="role-alumno" className="text-xs font-semibold cursor-pointer">Alumno</label>
+                  <label htmlFor="role-alumno" className="text-xs font-semibold cursor-pointer">Alumnos</label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Checkbox id="role-tutor" checked={targetTutor} onChange={(e) => setTargetTutor(e.target.checked)} />
-                  <label htmlFor="role-tutor" className="text-xs font-semibold cursor-pointer">Tutor</label>
+                  <Checkbox id="role-docente" checked={targetDocente} onChange={(e) => setTargetDocente(e.target.checked)} />
+                  <label htmlFor="role-docente" className="text-xs font-semibold cursor-pointer">Docentes</label>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Checkbox id="role-operador" checked={targetOperador} onChange={(e) => setTargetOperador(e.target.checked)} />
+                  <label htmlFor="role-operador" className="text-xs font-semibold cursor-pointer">Operadores</label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Checkbox id="role-admin" checked={targetAdmin} onChange={(e) => setTargetAdmin(e.target.checked)} />
-                  <label htmlFor="role-admin" className="text-xs font-semibold cursor-pointer">Admin</label>
+                  <label htmlFor="role-admin" className="text-xs font-semibold cursor-pointer">Administradores</label>
                 </div>
               </div>
             </div>
@@ -279,7 +267,7 @@ export default function ComunicacionesPage() {
       <Card className="lg:col-span-2">
         <CardHeader>
           <CardTitle>Registro de Entregas</CardTitle>
-          <CardDescription>Trazabilidad completa de notificaciones emitidas.</CardDescription>
+          <CardDescription>Trazabilidad completa de notificaciones emitidas y entregadas.</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -288,30 +276,38 @@ export default function ComunicacionesPage() {
                 <TableHead>Fecha y Hora</TableHead>
                 <TableHead>Asunto</TableHead>
                 <TableHead>Destinatario</TableHead>
+                <TableHead>Email</TableHead>
                 <TableHead>Rol</TableHead>
                 <TableHead>Canal</TableHead>
                 <TableHead>Estado</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {logs.map((log) => (
-                <TableRow key={log.id}>
-                  <TableCell className="text-xs">
-                    {new Date(log.sentAt).toLocaleString("es-PY")}
-                  </TableCell>
-                  <TableCell className="font-semibold text-slate-800">
-                    {log.communication?.subject}
-                  </TableCell>
-                  <TableCell className="text-xs">{log.recipient?.email}</TableCell>
-                  <TableCell className="text-xs font-bold">{log.recipient?.role}</TableCell>
-                  <TableCell className="text-xs">{log.channel}</TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                      <Check className="h-3 w-3" /> Entregado
-                    </span>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {logs.map((log) => {
+                const name = log.recipientName || (log.recipient ? `${log.recipient.firstName || ''} ${log.recipient.lastName || ''}`.trim() : '') || log.recipientEmail || log.recipient?.email;
+                const email = log.recipientEmail || log.recipient?.email || "-";
+                const role = log.recipientRole || log.recipient?.role || "Tutor";
+
+                return (
+                  <TableRow key={log.id}>
+                    <TableCell className="text-xs">
+                      {new Date(log.sentAt).toLocaleString("es-PY")}
+                    </TableCell>
+                    <TableCell className="font-semibold text-slate-800">
+                      {log.communication?.subject}
+                    </TableCell>
+                    <TableCell className="text-xs font-medium">{name}</TableCell>
+                    <TableCell className="text-xs text-muted-foreground">{email}</TableCell>
+                    <TableCell className="text-xs font-bold text-primary">{role}</TableCell>
+                    <TableCell className="text-xs">{log.channel}</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                        <Check className="h-3 w-3" /> Entregado
+                      </span>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
             </TableBody>
           </Table>
         </CardContent>

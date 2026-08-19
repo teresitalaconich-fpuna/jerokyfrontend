@@ -6,11 +6,10 @@ import { Button } from "../../../../components/ui/button";
 import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
 import { Select } from "../../../../components/ui/select";
-import { Checkbox } from "../../../../components/ui/checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../../../components/ui/table";
 import { fetchApi, ensureAuth } from "../../../../lib/api";
 import { useAuth } from "../../../../lib/auth-context";
-import { Shield, ShieldAlert, Check, UserPlus } from "lucide-react";
+import { Shield, ShieldAlert, UserPlus, Power, Edit, X } from "lucide-react";
 
 interface UserInfo {
   id: string;
@@ -21,13 +20,6 @@ interface UserInfo {
   isActive: boolean;
 }
 
-const mockUsers: UserInfo[] = [
-  { id: "u1", email: "admin@jeroky.com", role: "Administrator", firstName: "Admin", lastName: "Jeroky", isActive: true },
-  { id: "u2", email: "director@jeroky.com", role: "Director", firstName: "Director", lastName: "Jeroky", isActive: true },
-  { id: "u3", email: "docente@jeroky.com", role: "Docente", firstName: "Docente", lastName: "Jeroky", isActive: true },
-  { id: "u4", email: "operador@jeroky.com", role: "Operador", firstName: "Operador", lastName: "Jeroky", isActive: true },
-];
-
 export default function UsuariosPage() {
   const { user } = useAuth();
   const role = user?.role || null;
@@ -37,20 +29,29 @@ export default function UsuariosPage() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [password, setPassword] = useState("password123");
   const [selectedRole, setSelectedRole] = useState("Docente");
-  const [consent, setConsent] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
 
+  // Edit User State
+  const [editingUser, setEditingUser] = useState<UserInfo | null>(null);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [editRole, setEditRole] = useState("");
+  const [editLoading, setEditLoading] = useState(false);
+  const [editError, setEditError] = useState("");
+
   const loadUsers = React.useCallback(async () => {
     try {
       await ensureAuth();
       const data = await fetchApi<UserInfo[]>("/users");
-      setUsers(data.length > 0 ? data : mockUsers);
+      setUsers(Array.isArray(data) ? data : []);
     } catch {
-      setUsers(mockUsers);
+      setUsers([]);
     }
   }, []);
 
@@ -68,13 +69,13 @@ export default function UsuariosPage() {
 
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !firstName || !lastName) {
-      setError("Rellene todos los campos requeridos");
+    if (!email || !firstName || !lastName || !password) {
+      setError("Rellene todos los campos requeridos (la contraseña es obligatoria)");
       return;
     }
 
-    if (!consent) {
-      setError("Debe marcar la casilla de consentimiento biométrico para poder continuar con el enrolamiento");
+    if (password.length < 6) {
+      setError("La contraseña inicial debe tener al menos 6 caracteres");
       return;
     }
 
@@ -83,7 +84,6 @@ export default function UsuariosPage() {
     setSuccess("");
 
     try {
-      // Create user API call (Note: standard seed uses random password for demo)
       await fetchApi("/users", {
         method: "POST",
         body: JSON.stringify({
@@ -91,35 +91,81 @@ export default function UsuariosPage() {
           firstName,
           lastName,
           role: selectedRole,
-          password: "password123", // default temp password
+          password,
         }),
       });
 
-      setSuccess("Usuario creado correctamente con consentimiento biométrico.");
+      setSuccess("Usuario creado correctamente.");
       setEmail("");
       setFirstName("");
       setLastName("");
-      setConsent(false);
+      setPassword("");
       loadUsers();
-    } catch {
-      setSuccess("Usuario guardado correctamente (Simulado localmente)");
-      setUsers(prev => [
-        ...prev,
-        {
-          id: `u-new-${Date.now()}`,
-          email,
-          firstName,
-          lastName,
-          role: selectedRole,
-          isActive: true
-        }
-      ]);
-      setEmail("");
-      setFirstName("");
-      setLastName("");
-      setConsent(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al registrar usuario";
+      setError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleOpenEdit = (u: UserInfo) => {
+    setEditingUser(u);
+    setEditFirstName(u.firstName);
+    setEditLastName(u.lastName);
+    setEditEmail(u.email);
+    setEditRole(u.role);
+    setEditError("");
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingUser) return;
+
+    if (!editEmail || !editFirstName || !editLastName) {
+      setEditError("Todos los campos son obligatorios");
+      return;
+    }
+
+    setEditLoading(true);
+    setEditError("");
+
+    try {
+      await fetchApi(`/users/${editingUser.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          firstName: editFirstName,
+          lastName: editLastName,
+          email: editEmail,
+          role: editRole,
+        }),
+      });
+
+      setEditingUser(null);
+      loadUsers();
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al actualizar usuario";
+      setEditError(msg);
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleToggleActive = async (u: UserInfo) => {
+    const newStatus = !u.isActive;
+    const actionText = newStatus ? "reactivar" : "inactivar";
+    if (!window.confirm(`¿Está seguro de que desea ${actionText} a ${u.firstName} ${u.lastName}?`)) {
+      return;
+    }
+
+    try {
+      await fetchApi(`/users/${u.id}/status`, {
+        method: "PATCH",
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+      loadUsers();
+    } catch {
+      setUsers(prev => prev.map(item => item.id === u.id ? { ...item, isActive: newStatus } : item));
     }
   };
 
@@ -139,15 +185,15 @@ export default function UsuariosPage() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Create User & Consent Card */}
+      {/* Create User Card */}
       <Card className="lg:col-span-1 h-fit">
         <CardHeader>
           <div className="flex items-center gap-2">
-            <UserPlus className="h-6 w-6 text-accent" />
+            <UserPlus className="h-6 w-6 text-primary" />
             <CardTitle>Registrar Usuario</CardTitle>
           </div>
           <CardDescription>
-            De de alta nuevos usuarios y asigne privilegios de acceso.
+            De de alta nuevos usuarios operadores y asigne privilegios RBAC.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleCreateUser}>
@@ -165,47 +211,31 @@ export default function UsuariosPage() {
 
             <div className="space-y-1">
               <Label htmlFor="firstName">Nombre *</Label>
-              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="lastName">Apellido *</Label>
-              <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+              <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
             </div>
 
             <div className="space-y-1">
               <Label htmlFor="email">Email *</Label>
-              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@gmail.com" />
+              <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@jeroky.com" required />
+            </div>
+
+            <div className="space-y-1">
+              <Label htmlFor="password">Contraseña Inicial *</Label>
+              <Input id="password" type="text" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 6 caracteres" required minLength={6} />
             </div>
 
             <div className="space-y-1">
               <Label>Rol del Sistema *</Label>
               <Select value={selectedRole} onChange={(e) => setSelectedRole(e.target.value)}>
                 <option value="Administrator">Administrador</option>
-                <option value="Director">Director (Gerencia)</option>
                 <option value="Docente">Docente</option>
                 <option value="Operador">Operador (Usuario Administrativo)</option>
-                <option value="Alumno">Alumno</option>
-                <option value="Tutor">Tutor</option>
               </Select>
-            </div>
-
-            {/* Crucial Biometric Consent Checkbox */}
-            <div className="flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <Checkbox 
-                id="consent" 
-                checked={consent} 
-                onChange={(e) => setConsent(e.target.checked)} 
-                className="mt-1"
-              />
-              <div className="space-y-1">
-                <label htmlFor="consent" className="text-xs font-bold text-amber-900 cursor-pointer block leading-snug">
-                  Consentimiento Explícito de Biometría *
-                </label>
-                <p className="text-[10px] text-amber-800 leading-normal">
-                  Confirmo el consentimiento firmado del alumno (o tutor legal en caso de menores) para el almacenamiento cifrado y procesamiento de plantilla biométrica facial.
-                </p>
-              </div>
             </div>
           </CardContent>
           <CardFooter>
@@ -235,24 +265,43 @@ export default function UsuariosPage() {
                 <TableHead>Email</TableHead>
                 <TableHead>Rol Asignado</TableHead>
                 <TableHead>Estado</TableHead>
-                <TableHead>Consentimiento</TableHead>
+                <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {users.map((u) => (
-                <TableRow key={u.id}>
+                <TableRow key={u.id} className={!u.isActive ? "opacity-60 bg-slate-50/50" : ""}>
                   <TableCell className="font-semibold text-slate-800">{u.firstName} {u.lastName}</TableCell>
                   <TableCell>{u.email}</TableCell>
                   <TableCell className="text-xs font-bold text-primary">{u.role}</TableCell>
                   <TableCell>
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
-                      Activo
+                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                      u.isActive ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
+                    }`}>
+                      {u.isActive ? "Activo" : "Inactivo"}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <span className="inline-flex items-center gap-1 text-xs text-emerald-600 font-semibold">
-                      <Check className="h-4.5 w-4.5" /> Confirmado
-                    </span>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-1.5">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="h-8 px-2 text-xs flex items-center gap-1 text-blue-600 hover:bg-blue-50"
+                        onClick={() => handleOpenEdit(u)}
+                      >
+                        <Edit className="h-3.5 w-3.5" /> Editar
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className={`h-8 px-2 text-xs flex items-center gap-1 ${
+                          u.isActive ? "text-amber-600 hover:bg-amber-50" : "text-emerald-600 hover:bg-emerald-50"
+                        }`}
+                        onClick={() => handleToggleActive(u)}
+                      >
+                        <Power className="h-3.5 w-3.5" /> {u.isActive ? "Inactivar" : "Activar"}
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
@@ -260,6 +309,83 @@ export default function UsuariosPage() {
           </Table>
         </CardContent>
       </Card>
+
+      {/* Edit User Modal */}
+      {editingUser && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
+          <Card className="w-full max-w-md shadow-2xl bg-white">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-xl">Editar Usuario</CardTitle>
+                <button 
+                  onClick={() => setEditingUser(null)}
+                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </CardHeader>
+            <form onSubmit={handleSaveEdit}>
+              <CardContent className="space-y-4">
+                {editError && (
+                  <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive">
+                    {editError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="editFirstName">Nombre *</Label>
+                    <Input
+                      id="editFirstName"
+                      value={editFirstName}
+                      onChange={(e) => setEditFirstName(e.target.value)}
+                      required
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="editLastName">Apellido *</Label>
+                    <Input
+                      id="editLastName"
+                      value={editLastName}
+                      onChange={(e) => setEditLastName(e.target.value)}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="editEmail">Email *</Label>
+                  <Input
+                    id="editEmail"
+                    type="email"
+                    value={editEmail}
+                    onChange={(e) => setEditEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label>Rol del Sistema *</Label>
+                  <Select value={editRole} onChange={(e) => setEditRole(e.target.value)}>
+                    <option value="Administrator">Administrador</option>
+                    <option value="Docente">Docente</option>
+                    <option value="Operador">Operador (Usuario Administrativo)</option>
+                  </Select>
+                </div>
+              </CardContent>
+              <div className="flex justify-end gap-2 p-6 pt-0">
+                <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" disabled={editLoading}>
+                  {editLoading ? "Guardando..." : "Guardar Cambios"}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

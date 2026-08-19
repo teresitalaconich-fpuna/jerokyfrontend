@@ -119,11 +119,14 @@ export default function MatriculasPage() {
       const loadedCourses = await fetchApi<Course[]>("/courses");
       const loadedEnrollments = await fetchApi<Enrollment[]>("/students/info/enrollments");
 
-      setStudents(loadedStudents);
-      setCourses(loadedCourses);
-      setEnrollments(loadedEnrollments);
+      setStudents(Array.isArray(loadedStudents) ? loadedStudents : []);
+      setCourses(Array.isArray(loadedCourses) ? loadedCourses : []);
+      setEnrollments(Array.isArray(loadedEnrollments) ? loadedEnrollments : []);
     } catch (err) {
-      console.warn("Failed to load backend data, using mock data:", err);
+      console.error("Failed to load matriculas data:", err);
+      setStudents([]);
+      setCourses([]);
+      setEnrollments([]);
     }
   }, []);
 

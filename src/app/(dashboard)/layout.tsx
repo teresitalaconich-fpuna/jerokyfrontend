@@ -9,20 +9,19 @@ import {
   ClipboardList, 
   FileCheck, 
   MessageSquare, 
-  BarChart3, 
   ShieldAlert, 
-  Settings, 
   Camera, 
   LogOut,
   UserCheck,
   ChevronDown,
-  BookOpen
+  BookOpen,
+  Calendar
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../lib/auth-context";
 
 // Roles defined in backend
-export type UserRole = 'Administrator' | 'Director' | 'Docente' | 'Operador' | 'Alumno' | 'Tutor';
+export type UserRole = 'Administrator' | 'Docente' | 'Operador' | 'Alumno' | 'Tutor';
 
 interface SidebarItem {
   name: string;
@@ -32,17 +31,15 @@ interface SidebarItem {
 }
 
 const navigation: SidebarItem[] = [
-  { name: "Alumnos", href: "/alumnos", icon: Users, roles: ['Administrator', 'Director', 'Docente', 'Operador'] },
+  { name: "Alumnos", href: "/alumnos", icon: Users, roles: ['Administrator', 'Docente', 'Operador'] },
   { name: "Nuevo Registro", href: "/alumnos/nuevo", icon: UserCheck, roles: ['Administrator', 'Operador'] },
-  { name: "Oferta Académica", href: "/oferta-academica", icon: BookOpen, roles: ['Administrator', 'Director'] },
+  { name: "Oferta Académica", href: "/oferta-academica", icon: BookOpen, roles: ['Administrator', 'Operador', 'Docente'] },
+  { name: "Calendario Académico", href: "/admin/calendario", icon: Calendar, roles: ['Administrator', 'Operador'] },
   { name: "Matrículas", href: "/matriculas", icon: GraduationCap, roles: ['Administrator', 'Operador'] },
-  { name: "Control Asistencia", href: "/asistencia/reportes", icon: ClipboardList, roles: ['Administrator', 'Director', 'Docente', 'Operador'] },
+  { name: "Control Asistencia", href: "/asistencia/reportes", icon: ClipboardList, roles: ['Administrator', 'Docente', 'Operador'] },
   { name: "Cargar Calificaciones", href: "/calificaciones/cargar", icon: FileCheck, roles: ['Administrator', 'Docente'] },
-  { name: "Mensajería", href: "/comunicaciones", icon: MessageSquare, roles: ['Administrator', 'Director', 'Docente', 'Operador'] },
-  { name: "Panel Gerencial", href: "/gerencia", icon: BarChart3, roles: ['Administrator', 'Director'] },
-  { name: "Exportador MEC", href: "/gerencia/exportar", icon: FileCheck, roles: ['Administrator', 'Director'] },
+  { name: "Mensajería", href: "/comunicaciones", icon: MessageSquare, roles: ['Administrator', 'Docente', 'Operador'] },
   { name: "Usuarios y Permisos", href: "/admin/usuarios", icon: ShieldAlert, roles: ['Administrator'] },
-  { name: "Mantenimiento y Auditoría", href: "/admin/sistema", icon: Settings, roles: ['Administrator'] },
 ];
 
 export default function DashboardLayout({

@@ -20,33 +20,6 @@ interface AuditLog {
   details: string;
 }
 
-const mockAudits: AuditLog[] = [
-  {
-    id: "a1",
-    action: "USER_LOGIN",
-    timestamp: "2026-05-24T18:00:00Z",
-    username: "admin@jeroky.com",
-    ipAddress: "192.168.1.50",
-    details: "Inicio de sesión de administrador exitoso"
-  },
-  {
-    id: "a2",
-    action: "STUDENT_REGISTERED",
-    timestamp: "2026-05-24T18:05:00Z",
-    username: "admin@jeroky.com",
-    ipAddress: "192.168.1.50",
-    details: "Se registró al alumno Sofía Ayala (CI: 5423891)"
-  },
-  {
-    id: "a3",
-    action: "BACKUP_GENERATED",
-    timestamp: "2026-05-24T16:00:00Z",
-    username: "System Task",
-    ipAddress: "127.0.0.1",
-    details: "Respaldo programado automatizado creado: backup_2026-05-24.sql"
-  }
-];
-
 export default function SistemaPage() {
   const { user } = useAuth();
   const role = user?.role || null;
@@ -56,19 +29,22 @@ export default function SistemaPage() {
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
   const [backupLoading, setBackupLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
+  const [errorMsg, setErrorMsg] = useState("");
 
   const loadInitialData = React.useCallback(async () => {
     try {
       await ensureAuth();
-      const auditData = await fetchApi<AuditLog[]>("/audit");
-      const intervalData = await fetchApi<{ intervalMinutes: number }>("/system/backup/interval");
+      const [auditData, intervalData] = await Promise.all([
+        fetchApi<AuditLog[]>("/audit").catch(() => []),
+        fetchApi<{ intervalMinutes: number }>("/system/backup/interval").catch(() => null),
+      ]);
 
-      setAudits(auditData.length > 0 ? auditData : mockAudits);
+      setAudits(Array.isArray(auditData) ? auditData : []);
       if (intervalData?.intervalMinutes) {
         setIntervalMin(intervalData.intervalMinutes);
       }
     } catch {
-      setAudits(mockAudits);
+      setAudits([]);
     }
   }, []);
 
@@ -87,40 +63,33 @@ export default function SistemaPage() {
   const triggerBackup = async () => {
     setBackupLoading(true);
     setSuccessMsg("");
+    setErrorMsg("");
     setIsBackupModalOpen(false);
 
     try {
       const res = await fetchApi<{ filename: string }>("/system/backup", { method: "POST" });
       setSuccessMsg(`Respaldo creado con éxito: ${res.filename}`);
       loadInitialData();
-    } catch {
-      // Mock local backup
-      setSuccessMsg(`Respaldo creado con éxito (Simulado): backup_manual_${Date.now()}.sql`);
-      setAudits(prev => [
-        {
-          id: `a-new-${Date.now()}`,
-          action: "BACKUP_GENERATED",
-          timestamp: new Date().toISOString(),
-          username: "admin@jeroky.com",
-          ipAddress: "127.0.0.1",
-          details: "Respaldo manual disparado exitosamente"
-        },
-        ...prev
-      ]);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al generar respaldo de base de datos";
+      setErrorMsg(msg);
     } finally {
       setBackupLoading(false);
     }
   };
 
   const handleSaveInterval = async () => {
+    setSuccessMsg("");
+    setErrorMsg("");
     try {
       await fetchApi("/system/backup/interval", {
         method: "POST",
         body: JSON.stringify({ minutes: Number(intervalMin) }),
       });
       setSuccessMsg("Intervalo de respaldo automatizado actualizado.");
-    } catch {
-      setSuccessMsg("Intervalo guardado (Simulado localmente)");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Error al actualizar intervalo de respaldo";
+      setErrorMsg(msg);
     }
   };
 
@@ -159,6 +128,11 @@ export default function SistemaPage() {
             {successMsg && (
               <div className="p-3 text-xs text-emerald-800 bg-emerald-100 rounded-lg border border-emerald-200">
                 {successMsg}
+              </div>
+            )}
+            {errorMsg && (
+              <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive">
+                {errorMsg}
               </div>
             )}
 

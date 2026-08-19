@@ -4,7 +4,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useRouter } from "next/navigation";
 import { fetchApi } from "./api";
 
-export type UserRole = 'Administrator' | 'Director' | 'Docente' | 'Operador' | 'Alumno' | 'Tutor';
+export type UserRole = 'Administrator' | 'Docente' | 'Operador' | 'Alumno' | 'Tutor';
 
 export interface UserProfile {
   firstName: string;

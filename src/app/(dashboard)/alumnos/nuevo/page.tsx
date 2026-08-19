@@ -6,7 +6,18 @@ import { Button } from "../../../../components/ui/button";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../../../components/ui/card";
 import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
+import { Checkbox } from "../../../../components/ui/checkbox";
+import { Select } from "../../../../components/ui/select";
 import { fetchApi, ensureAuth } from "../../../../lib/api";
+
+interface TutorOption {
+  id: string;
+  firstName: string;
+  lastName: string;
+  ci: string;
+  phone: string;
+  email: string;
+}
 
 export default function NuevoAlumnoPage() {
   const router = useRouter();
@@ -20,6 +31,9 @@ export default function NuevoAlumnoPage() {
   const [biometricConsent, setBiometricConsent] = useState(false);
 
   // Tutor fields (shown if minor)
+  const [tutorMode, setTutorMode] = useState<"new" | "existing">("new");
+  const [existingTutors, setExistingTutors] = useState<TutorOption[]>([]);
+  const [selectedTutorId, setSelectedTutorId] = useState("");
   const [tutorFirstName, setTutorFirstName] = useState("");
   const [tutorLastName, setTutorLastName] = useState("");
   const [tutorCi, setTutorCi] = useState("");
@@ -31,7 +45,25 @@ export default function NuevoAlumnoPage() {
   const [success, setSuccess] = useState("");
 
   useEffect(() => {
-    ensureAuth();
+    let active = true;
+    const fetchTutors = async () => {
+      try {
+        await ensureAuth();
+        const tutors = await fetchApi<TutorOption[]>("/students/info/tutors");
+        if (active && tutors && tutors.length > 0) {
+          setExistingTutors(tutors);
+          setSelectedTutorId(tutors[0].id);
+        }
+      } catch {
+        // ignore
+      }
+    };
+
+    fetchTutors();
+
+    return () => {
+      active = false;
+    };
   }, []);
 
   // Compute age and minor status when birthdate changes
@@ -69,20 +101,26 @@ export default function NuevoAlumnoPage() {
 
     // Tutor validation if minor
     if (isMinor) {
-      if (!tutorFirstName || tutorFirstName.length < 3 || tutorFirstName.length > 30 || !nameRegex.test(tutorFirstName)) {
-        newErrors.tutorFirstName = "Nombre del tutor inválido (letras, 3-30 caracteres)";
-      }
-      if (!tutorLastName || tutorLastName.length < 3 || tutorLastName.length > 30 || !nameRegex.test(tutorLastName)) {
-        newErrors.tutorLastName = "Apellido del tutor inválido (letras, 3-30 caracteres)";
-      }
-      if (!tutorCi || !/^\d{6,15}$/.test(tutorCi)) {
-        newErrors.tutorCi = "La CI del tutor debe ser numérica (mínimo 6 dígitos)";
-      }
-      if (!tutorPhone || !/^\d{6,13}$/.test(tutorPhone)) {
-        newErrors.tutorPhone = "El teléfono del tutor debe ser numérico (6-13 dígitos)";
-      }
-      if (!tutorEmail || !/\S+@\S+\.\S+/.test(tutorEmail)) {
-        newErrors.tutorEmail = "Debe ingresar un email de tutor válido";
+      if (tutorMode === "existing") {
+        if (!selectedTutorId) {
+          newErrors.selectedTutorId = "Debe seleccionar un tutor existente";
+        }
+      } else {
+        if (!tutorFirstName || tutorFirstName.length < 3 || tutorFirstName.length > 30 || !nameRegex.test(tutorFirstName)) {
+          newErrors.tutorFirstName = "Nombre del tutor inválido (letras, 3-30 caracteres)";
+        }
+        if (!tutorLastName || tutorLastName.length < 3 || tutorLastName.length > 30 || !nameRegex.test(tutorLastName)) {
+          newErrors.tutorLastName = "Apellido del tutor inválido (letras, 3-30 caracteres)";
+        }
+        if (!tutorCi || !/^\d{6,15}$/.test(tutorCi)) {
+          newErrors.tutorCi = "La CI del tutor debe ser numérica (mínimo 6 dígitos)";
+        }
+        if (!tutorPhone || !/^\d{6,13}$/.test(tutorPhone)) {
+          newErrors.tutorPhone = "El teléfono del tutor debe ser numérico (6-13 dígitos)";
+        }
+        if (!tutorEmail || !/\S+@\S+\.\S+/.test(tutorEmail)) {
+          newErrors.tutorEmail = "Debe ingresar un email de tutor válido";
+        }
       }
     }
 
@@ -104,15 +142,19 @@ export default function NuevoAlumnoPage() {
         birthDate,
         encryptedMedicalInfo: medicalInfo || undefined,
         biometricConsent,
-        ...(isMinor ? {
-          tutor: {
-            firstName: tutorFirstName,
-            lastName: tutorLastName,
-            ci: tutorCi,
-            phone: tutorPhone,
-            email: tutorEmail,
-          }
-        } : {})
+        ...(isMinor
+          ? tutorMode === "existing"
+            ? { tutorId: selectedTutorId }
+            : {
+                tutor: {
+                  firstName: tutorFirstName,
+                  lastName: tutorLastName,
+                  ci: tutorCi,
+                  phone: tutorPhone,
+                  email: tutorEmail,
+                },
+              }
+          : {}),
       };
 
       await fetchApi("/students", {
@@ -227,75 +269,143 @@ export default function NuevoAlumnoPage() {
               />
             </div>
 
+            {/* Biometric Consent Checkbox */}
+            <div className="flex items-start gap-3 p-4 bg-amber-50/80 border border-amber-200 rounded-lg">
+              <Checkbox
+                id="biometricConsent"
+                checked={biometricConsent}
+                onChange={(e) => setBiometricConsent(e.target.checked)}
+                className="mt-1"
+              />
+              <div className="space-y-1">
+                <label htmlFor="biometricConsent" className="text-xs font-bold text-amber-900 cursor-pointer block leading-snug">
+                  Consentimiento Informado de Biometría Facial *
+                </label>
+                <p className="text-[11px] text-amber-800 leading-normal">
+                  Autorizo de forma expresa el almacenamiento cifrado y procesamiento de la plantilla biométrica facial del estudiante para el registro automatizado de asistencia y control de acceso seguro en la academia.
+                </p>
+              </div>
+            </div>
+
             {/* Minor / Tutor Link Conditional Section */}
             {isMinor && (
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-lg space-y-4 animate-in fade-in duration-300">
-                <h3 className="font-semibold text-sm text-primary">Información del Padre, Madre o Tutor Legal</h3>
-                <p className="text-xs text-muted-foreground">
-                  El alumno tiene menos de 18 años. Se requiere vincular un tutor legal.
-                </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="tutorFirstName">Nombre del Tutor *</Label>
-                    <Input
-                      id="tutorFirstName"
-                      value={tutorFirstName}
-                      onChange={(e) => setTutorFirstName(e.target.value)}
-                    />
-                    {errors.tutorFirstName && <p className="text-xs text-destructive">{errors.tutorFirstName}</p>}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <div>
+                    <h3 className="font-semibold text-sm text-primary">Información del Padre, Madre o Tutor Legal</h3>
+                    <p className="text-xs text-muted-foreground">
+                      El alumno tiene menos de 18 años. Se requiere vincular un tutor legal.
+                    </p>
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="tutorLastName">Apellido del Tutor *</Label>
-                    <Input
-                      id="tutorLastName"
-                      value={tutorLastName}
-                      onChange={(e) => setTutorLastName(e.target.value)}
-                    />
-                    {errors.tutorLastName && <p className="text-xs text-destructive">{errors.tutorLastName}</p>}
-                  </div>
+                  {existingTutors.length > 0 && (
+                    <div className="flex gap-2">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={tutorMode === "new" ? "default" : "outline"}
+                        onClick={() => setTutorMode("new")}
+                      >
+                        Crear Nuevo
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant={tutorMode === "existing" ? "default" : "outline"}
+                        onClick={() => setTutorMode("existing")}
+                      >
+                        Seleccionar Existente
+                      </Button>
+                    </div>
+                  )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="tutorCi">CI del Tutor *</Label>
-                    <Input
-                      id="tutorCi"
-                      value={tutorCi}
-                      onChange={(e) => setTutorCi(e.target.value)}
-                    />
-                    {errors.tutorCi && <p className="text-xs text-destructive">{errors.tutorCi}</p>}
+                {tutorMode === "existing" && existingTutors.length > 0 ? (
+                  <div className="space-y-2">
+                    <Label>Seleccionar Tutor Registrado</Label>
+                    <Select
+                      value={selectedTutorId}
+                      onChange={(e) => setSelectedTutorId(e.target.value)}
+                    >
+                      {existingTutors.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.firstName} {t.lastName} (CI: {t.ci} - Tel: {t.phone})
+                        </option>
+                      ))}
+                    </Select>
+                    {errors.selectedTutorId && (
+                      <p className="text-xs text-destructive">{errors.selectedTutorId}</p>
+                    )}
                   </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="tutorPhone">Celular del Tutor *</Label>
-                    <Input
-                      id="tutorPhone"
-                      value={tutorPhone}
-                      onChange={(e) => setTutorPhone(e.target.value)}
-                      placeholder="Ej. 0981234567"
-                    />
-                    {errors.tutorPhone && <p className="text-xs text-destructive">{errors.tutorPhone}</p>}
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="tutorFirstName">Nombre del Tutor *</Label>
+                        <Input
+                          id="tutorFirstName"
+                          value={tutorFirstName}
+                          onChange={(e) => setTutorFirstName(e.target.value)}
+                        />
+                        {errors.tutorFirstName && <p className="text-xs text-destructive">{errors.tutorFirstName}</p>}
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="tutorLastName">Apellido del Tutor *</Label>
+                        <Input
+                          id="tutorLastName"
+                          value={tutorLastName}
+                          onChange={(e) => setTutorLastName(e.target.value)}
+                        />
+                        {errors.tutorLastName && <p className="text-xs text-destructive">{errors.tutorLastName}</p>}
+                      </div>
+                    </div>
 
-                <div className="space-y-1">
-                  <Label htmlFor="tutorEmail">Correo Electrónico del Tutor *</Label>
-                  <Input
-                    id="tutorEmail"
-                    value={tutorEmail}
-                    onChange={(e) => setTutorEmail(e.target.value)}
-                    placeholder="tutor@gmail.com"
-                  />
-                  {errors.tutorEmail && <p className="text-xs text-destructive">{errors.tutorEmail}</p>}
-                </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label htmlFor="tutorCi">CI del Tutor *</Label>
+                        <Input
+                          id="tutorCi"
+                          value={tutorCi}
+                          onChange={(e) => setTutorCi(e.target.value)}
+                        />
+                        {errors.tutorCi && <p className="text-xs text-destructive">{errors.tutorCi}</p>}
+                      </div>
+                      <div className="space-y-1">
+                        <Label htmlFor="tutorPhone">Celular del Tutor *</Label>
+                        <Input
+                          id="tutorPhone"
+                          value={tutorPhone}
+                          onChange={(e) => setTutorPhone(e.target.value)}
+                          placeholder="Ej. 0981234567"
+                        />
+                        {errors.tutorPhone && <p className="text-xs text-destructive">{errors.tutorPhone}</p>}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label htmlFor="tutorEmail">Correo Electrónico del Tutor *</Label>
+                      <Input
+                        id="tutorEmail"
+                        value={tutorEmail}
+                        onChange={(e) => setTutorEmail(e.target.value)}
+                        placeholder="tutor@gmail.com"
+                      />
+                      {errors.tutorEmail && <p className="text-xs text-destructive">{errors.tutorEmail}</p>}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </CardContent>
-          <CardFooter className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => router.push("/alumnos")}>
+          <CardFooter className="flex justify-end gap-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => router.push("/alumnos")}
+            >
               Cancelar
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Guardando..." : "Guardar Registro"}
+              {loading ? "Registrando..." : "Guardar Alumno"}
             </Button>
           </CardFooter>
         </form>

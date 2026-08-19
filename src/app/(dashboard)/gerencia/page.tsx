@@ -34,39 +34,32 @@ interface DashboardStats {
 
 const COLORS = ["#1e293b", "#3b82f6", "#f97316", "#10b981", "#a855f7"];
 
+const initialStats: DashboardStats = {
+  totalStudents: 0,
+  totalTeachers: 0,
+  totalModalities: 0,
+  averageAttendance: 0,
+  performanceByStyle: [],
+  capacityRates: []
+};
+
 export default function GerenciaDashboard() {
   const { user } = useAuth();
   const role = user?.role || null;
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalStudents: 118,
-    totalTeachers: 12,
-    totalModalities: 8,
-    averageAttendance: 92,
-    performanceByStyle: [
-      { style: "Ballet Clásico", average: 92.5 },
-      { style: "Danza Paraguaya", average: 88.0 },
-      { style: "Contemporáneo", average: 85.3 },
-      { style: "Jazz", average: 90.1 },
-    ],
-    capacityRates: [
-      { courseName: "Ballet Nivel Intermedio", enrolled: 12, capacity: 15, rate: 80 },
-      { courseName: "Ballet Nivel Avanzado", enrolled: 11, capacity: 12, rate: 91 },
-      { courseName: "Técnica de Puntas", enrolled: 7, capacity: 8, rate: 87 },
-    ]
-  });
+  const [stats, setStats] = useState<DashboardStats>(initialStats);
 
   useEffect(() => {
     ensureAuth();
 
     const loadStats = async () => {
       try {
-        const data = await fetchApi<typeof stats>("/system/dashboard-stats");
+        const data = await fetchApi<DashboardStats>("/system/dashboard-stats");
         if (data) {
           setStats(data);
         }
       } catch {
-        console.warn("Using mock stats for dashboard");
+        setStats(initialStats);
       } finally {
         setLoading(false);
       }
@@ -79,7 +72,7 @@ export default function GerenciaDashboard() {
   }
 
   // RBAC Client check
-  const isAuthorized = role === "Administrator" || role === "Director";
+  const isAuthorized = role === "Administrator";
   if (!isAuthorized) {
     return (
       <div className="max-w-md mx-auto mt-20 text-center p-8 bg-white border border-slate-200 rounded-xl shadow-lg space-y-4">
