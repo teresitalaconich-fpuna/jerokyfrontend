@@ -127,8 +127,8 @@ export default function NuevoAlumnoPage() {
         if (!tutorCi || !/^\d{6,15}$/.test(tutorCi)) {
           newErrors.tutorCi = "La CI del tutor debe ser numérica (mínimo 6 dígitos)";
         }
-        if (!tutorPhone || !/^\d{6,13}$/.test(tutorPhone)) {
-          newErrors.tutorPhone = "El teléfono del tutor debe ser numérico (6-13 dígitos)";
+        if (!tutorPhone || !/^\+?[\d\s-]{6,20}$/.test(tutorPhone)) {
+          newErrors.tutorPhone = "El teléfono del tutor debe ser válido (mínimo 6 dígitos)";
         }
         if (!tutorEmail || !/\S+@\S+\.\S+/.test(tutorEmail)) {
           newErrors.tutorEmail = "Debe ingresar un email de tutor válido";
