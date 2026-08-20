@@ -53,7 +53,7 @@ export function useFaceDetector({
     let isMounted = true;
 
     async function initDetector() {
-      if (detectorRef.current || isInitializing) return;
+      if (detectorRef.current || isProcessingRef.current) return;
       setIsInitializing(true);
       setInitError(null);
 
@@ -102,12 +102,20 @@ export function useFaceDetector({
 
   // Update detection state when cooldown is active
   useEffect(() => {
+    let active = true;
     if (cooldownRemaining > 0) {
-      setDetectionState("cooldown");
-      faceMustLeaveRef.current = true; // require subject to clear or reset before new trigger
-      setStabilityScore(0);
-      setBoundingBox(null);
+      Promise.resolve().then(() => {
+        if (active) {
+          setDetectionState("cooldown");
+          faceMustLeaveRef.current = true; // require subject to clear or reset before new trigger
+          setStabilityScore(0);
+          setBoundingBox(null);
+        }
+      });
     }
+    return () => {
+      active = false;
+    };
   }, [cooldownRemaining]);
 
   // 2. Continuous Analysis Loop (Local, 0 network requests)

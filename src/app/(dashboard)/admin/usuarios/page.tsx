@@ -7,9 +7,10 @@ import { Input } from "../../../../components/ui/input";
 import { Label } from "../../../../components/ui/label";
 import { Select } from "../../../../components/ui/select";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../../../components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../../../components/ui/dialog";
 import { fetchApi, ensureAuth } from "../../../../lib/api";
 import { useAuth } from "../../../../lib/auth-context";
-import { Shield, ShieldAlert, UserPlus, Power, Edit, X } from "lucide-react";
+import { Shield, ShieldAlert, UserPlus, Power, Edit } from "lucide-react";
 
 interface UserInfo {
   id: string;
@@ -258,7 +259,7 @@ export default function UsuariosPage() {
           </div>
         </CardHeader>
         <CardContent>
-          <Table>
+          <Table className="min-w-[640px]">
             <TableHeader>
               <TableRow>
                 <TableHead>Nombre</TableHead>
@@ -275,7 +276,7 @@ export default function UsuariosPage() {
                   <TableCell>{u.email}</TableCell>
                   <TableCell className="text-xs font-bold text-primary">{u.role}</TableCell>
                   <TableCell>
-                    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${
                       u.isActive ? "bg-emerald-100 text-emerald-800" : "bg-red-100 text-red-800"
                     }`}>
                       {u.isActive ? "Activo" : "Inactivo"}
@@ -311,81 +312,71 @@ export default function UsuariosPage() {
       </Card>
 
       {/* Edit User Modal */}
-      {editingUser && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-md shadow-2xl bg-white">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-xl">Editar Usuario</CardTitle>
-                <button 
-                  onClick={() => setEditingUser(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </CardHeader>
-            <form onSubmit={handleSaveEdit}>
-              <CardContent className="space-y-4">
-                {editError && (
-                  <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive">
-                    {editError}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label htmlFor="editFirstName">Nombre *</Label>
-                    <Input
-                      id="editFirstName"
-                      value={editFirstName}
-                      onChange={(e) => setEditFirstName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label htmlFor="editLastName">Apellido *</Label>
-                    <Input
-                      id="editLastName"
-                      value={editLastName}
-                      onChange={(e) => setEditLastName(e.target.value)}
-                      required
-                    />
-                  </div>
+      <Dialog open={Boolean(editingUser)} onOpenChange={(open) => !open && setEditingUser(null)}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-slate-200">
+          <DialogHeader className="p-4 sm:p-6 pb-2 border-b border-slate-100">
+            <DialogTitle className="text-lg sm:text-xl font-bold text-slate-800">Editar Usuario</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleSaveEdit} className="overflow-y-auto flex-1">
+            <div className="space-y-4 p-4 sm:p-6">
+              {editError && (
+                <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive">
+                  {editError}
                 </div>
+              )}
 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-1">
-                  <Label htmlFor="editEmail">Email *</Label>
+                  <Label htmlFor="editFirstName">Nombre *</Label>
                   <Input
-                    id="editEmail"
-                    type="email"
-                    value={editEmail}
-                    onChange={(e) => setEditEmail(e.target.value)}
+                    id="editFirstName"
+                    value={editFirstName}
+                    onChange={(e) => setEditFirstName(e.target.value)}
                     required
                   />
                 </div>
-
                 <div className="space-y-1">
-                  <Label>Rol del Sistema *</Label>
-                  <Select value={editRole} onChange={(e) => setEditRole(e.target.value)}>
-                    <option value="Administrator">Administrador</option>
-                    <option value="Docente">Docente</option>
-                    <option value="Operador">Operador (Usuario Administrativo)</option>
-                  </Select>
+                  <Label htmlFor="editLastName">Apellido *</Label>
+                  <Input
+                    id="editLastName"
+                    value={editLastName}
+                    onChange={(e) => setEditLastName(e.target.value)}
+                    required
+                  />
                 </div>
-              </CardContent>
-              <div className="flex justify-end gap-2 p-6 pt-0">
-                <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={editLoading}>
-                  {editLoading ? "Guardando..." : "Guardar Cambios"}
-                </Button>
               </div>
-            </form>
-          </Card>
-        </div>
-      )}
+
+              <div className="space-y-1">
+                <Label htmlFor="editEmail">Email *</Label>
+                <Input
+                  id="editEmail"
+                  type="email"
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Rol del Sistema *</Label>
+                <Select value={editRole} onChange={(e) => setEditRole(e.target.value)}>
+                  <option value="Administrator">Administrador</option>
+                  <option value="Docente">Docente</option>
+                  <option value="Operador">Operador (Usuario Administrativo)</option>
+                </Select>
+              </div>
+            </div>
+            <DialogFooter className="p-4 sm:p-6 pt-3 border-t border-slate-100 bg-slate-50/50">
+              <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={editLoading}>
+                {editLoading ? "Guardando..." : "Guardar Cambios"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

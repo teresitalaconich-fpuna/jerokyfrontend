@@ -11,14 +11,14 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4">
       {/* Backdrop */}
       <div 
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity" 
+        className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity" 
         onClick={() => onOpenChange(false)}
       />
       {/* Content wrapper */}
-      <div className="relative z-10 w-full max-w-lg p-6 bg-card text-card-foreground border border-border rounded-lg shadow-lg animate-in fade-in zoom-in duration-200">
+      <div className="relative z-10 w-full max-w-lg max-h-[90vh] overflow-y-auto p-4 sm:p-6 bg-white dark:bg-card text-card-foreground border border-border rounded-2xl shadow-xl animate-in fade-in zoom-in duration-200">
         {children}
       </div>
     </div>

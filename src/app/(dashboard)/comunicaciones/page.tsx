@@ -162,7 +162,15 @@ export default function ComunicacionesPage() {
 
     try {
       const response = await fetchApi<{
-        communication: any;
+        communication: {
+          id: string;
+          subject: string;
+          body: string;
+          targetRoles: string[];
+          channels: string[];
+          courseId?: string | null;
+          createdAt?: string;
+        };
         summary: {
           totalRecipients: number;
           emailDispatches: { total: number; delivered: number; failed: number };
@@ -497,7 +505,7 @@ export default function ComunicacionesPage() {
         </CardHeader>
 
         <CardContent className="p-0 flex-1 overflow-x-auto">
-          <Table>
+          <Table className="min-w-[650px]">
             <TableHeader>
               <TableRow className="bg-slate-50/70">
                 <TableHead className="text-xs font-semibold">Fecha y Hora</TableHead>

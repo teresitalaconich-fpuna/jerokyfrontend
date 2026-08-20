@@ -16,9 +16,10 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { fetchApi, ensureAuth } from "../../../lib/api";
-import { Plus, Search, FileText, Edit, Power, X, User, Phone, ShieldCheck, Camera, CheckCircle2, AlertCircle } from "lucide-react";
+import { Plus, Search, FileText, Edit, Power, User, Phone, ShieldCheck, Camera, CheckCircle2, AlertCircle } from "lucide-react";
 import FaceEnrollmentModal from "../../../components/biometrics/FaceEnrollmentModal";
 import { Pagination } from "../../../components/ui/pagination";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../components/ui/dialog";
 
 interface StudentData {
   id: string;
@@ -277,7 +278,7 @@ export default function AlumnosPage() {
             <div className="py-10 text-center text-sm text-slate-500">No se encontraron alumnos registrados.</div>
           ) : (
             <>
-              <Table>
+              <Table className="min-w-[700px]">
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nombre</TableHead>
@@ -398,37 +399,28 @@ export default function AlumnosPage() {
       </Card>
 
       {/* Edit Student Modal */}
-      {editingStudent && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200 overflow-y-auto">
-          <Card className="w-full max-w-xl shadow-2xl bg-white my-8 max-h-[90vh] flex flex-col">
-            <CardHeader className="border-b border-slate-100 pb-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl font-bold text-slate-800">Editar Datos del Alumno</CardTitle>
-                  <p className="text-xs text-muted-foreground mt-0.5">Modifique la información personal y los datos del tutor legal.</p>
+      <Dialog open={Boolean(editingStudent)} onOpenChange={(open) => !open && setEditingStudent(null)}>
+        <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white border border-slate-200">
+          <DialogHeader className="border-b border-slate-100 p-4 sm:p-6 pb-4">
+            <DialogTitle className="text-lg sm:text-xl font-bold text-slate-800">Editar Datos del Alumno</DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground mt-0.5">
+              Modifique la información personal y los datos del tutor legal.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={handleSaveEdit} className="overflow-y-auto flex-1">
+            <div className="space-y-5 p-4 sm:p-6">
+              {editError && (
+                <div className="p-3 text-xs text-destructive bg-destructive/10 rounded-lg border border-destructive/20 font-medium">
+                  {editError}
                 </div>
-                <button 
-                  onClick={() => setEditingStudent(null)}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors"
-                >
-                  <X className="h-5 w-5" />
-                </button>
-              </div>
-            </CardHeader>
-            <form onSubmit={handleSaveEdit} className="overflow-y-auto flex-1">
-              <CardContent className="space-y-5 p-6">
-                {editError && (
-                  <div className="p-3 text-xs text-destructive bg-destructive/10 rounded-lg border border-destructive/20 font-medium">
-                    {editError}
-                  </div>
-                )}
+              )}
 
                 {/* Section 1: Student Personal Information */}
                 <div className="space-y-3">
                   <h4 className="text-xs font-bold text-primary uppercase tracking-wider flex items-center gap-1.5">
                     <User className="h-3.5 w-3.5" /> Datos Personales del Alumno
                   </h4>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-1">
                       <Label htmlFor="editFirstName" className="text-xs font-semibold">Nombre *</Label>
                       <Input
@@ -451,7 +443,7 @@ export default function AlumnosPage() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-1">
                       <Label htmlFor="editCi" className="text-xs font-semibold">Cédula de Identidad (CI) *</Label>
                       <Input
@@ -514,8 +506,8 @@ export default function AlumnosPage() {
                   </div>
 
                   {(editHasTutor || editingIsMinor) && (
-                    <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 animate-in fade-in">
-                      <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 sm:p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3 animate-in fade-in">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div className="space-y-1">
                           <Label htmlFor="editTutorFirstName" className="text-xs font-semibold">Nombre del Tutor *</Label>
                           <Input
@@ -538,7 +530,7 @@ export default function AlumnosPage() {
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                         <div className="space-y-1">
                           <Label htmlFor="editTutorCi" className="text-xs font-semibold">Cédula del Tutor (CI) *</Label>
                           <Input
@@ -594,19 +586,18 @@ export default function AlumnosPage() {
                     </p>
                   </div>
                 </div>
-              </CardContent>
-              <div className="flex justify-end gap-2 p-6 pt-0 border-t border-slate-100 bg-slate-50/50">
+              </div>
+              <DialogFooter className="p-4 sm:p-6 pt-3 border-t border-slate-100 bg-slate-50/50">
                 <Button type="button" variant="outline" onClick={() => setEditingStudent(null)} className="text-xs">
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={editLoading} className="text-xs font-semibold">
                   {editLoading ? "Guardando..." : "Guardar Cambios"}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
-          </Card>
-        </div>
-      )}
+          </DialogContent>
+        </Dialog>
 
       {/* Face Enrollment Modal */}
       <FaceEnrollmentModal

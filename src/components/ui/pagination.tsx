@@ -53,12 +53,12 @@ export function Pagination({
   return (
     <div
       className={cn(
-        "flex flex-col sm:flex-row items-center justify-between gap-4 py-4 px-2 select-none",
+        "flex flex-col sm:flex-row items-center justify-between gap-3.5 py-3 px-1 select-none",
         className
       )}
     >
       {/* Left side: Item count summary & Page size selector */}
-      <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-slate-600">
+      <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2.5 text-xs text-slate-600 w-full sm:w-auto">
         <div>
           Mostrando <span className="font-semibold text-slate-900">{startItem}</span> a{" "}
           <span className="font-semibold text-slate-900">{endItem}</span> de{" "}
@@ -66,8 +66,8 @@ export function Pagination({
         </div>
 
         {onPageSizeChange && (
-          <div className="flex items-center gap-1.5 ml-2 border-l border-slate-200 pl-3">
-            <span className="text-slate-500 text-xs">Por página:</span>
+          <div className="flex items-center gap-1.5 border-l border-slate-200 pl-2.5">
+            <span className="text-slate-500 text-[11px] sm:text-xs">Por pág:</span>
             <select
               aria-label="Cantidad de registros por página"
               value={pageSize}
@@ -76,7 +76,7 @@ export function Pagination({
                 onPageSizeChange(newSize);
                 onPageChange(1);
               }}
-              className="h-8 rounded-md border border-slate-200 bg-white px-2 text-xs font-medium text-slate-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#2C58A2]/20 focus:border-[#2C58A2]"
+              className="h-7 sm:h-8 rounded-md border border-slate-200 bg-white px-1.5 text-xs font-medium text-slate-700 shadow-xs focus:outline-hidden focus:ring-2 focus:ring-[#2C58A2]/20 focus:border-[#2C58A2]"
             >
               {pageSizeOptions.map((opt) => (
                 <option key={opt} value={opt}>
@@ -89,7 +89,7 @@ export function Pagination({
       </div>
 
       {/* Right side: Navigation buttons */}
-      <div className="flex items-center gap-1">
+      <div className="flex items-center justify-center gap-1 flex-wrap">
         {/* First page button */}
         <Button
           type="button"
@@ -118,8 +118,8 @@ export function Pagination({
           <ChevronLeft className="h-4 w-4" />
         </Button>
 
-        {/* Page buttons */}
-        <div className="flex items-center gap-1">
+        {/* Page buttons for medium+ screens */}
+        <div className="hidden sm:flex items-center gap-1">
           {pages.map((p, idx) => {
             if (p === "...") {
               return (
@@ -154,6 +154,11 @@ export function Pagination({
               </Button>
             );
           })}
+        </div>
+
+        {/* Compact page indicator on mobile */}
+        <div className="flex sm:hidden items-center px-2 py-1 bg-slate-100 rounded-md text-xs font-bold text-slate-700">
+          <span>{safePage} / {totalPages}</span>
         </div>
 
         {/* Next page button */}

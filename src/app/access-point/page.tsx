@@ -19,7 +19,6 @@ import {
   Minimize,
   Zap,
   Clock,
-  ScanFace,
 } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { fetchApi, registerDocumentAttendance, ensureAuth } from "../../lib/api";
@@ -31,18 +30,31 @@ const videoConstraints = {
   facingMode: "user",
 };
 
-// Web Audio API Sound Synthesizer
-function playChime(type: "success" | "error") {
+// Web Audio API Shared Singleton Synthesizer
+let sharedAudioCtx: AudioContext | null = null;
+function getSharedAudioContext(): AudioContext | null {
+  if (typeof window === "undefined") return null;
   try {
     const AudioCtx =
       window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext;
-    if (!AudioCtx) return;
-    const ctx = new AudioCtx();
-    if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
+      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    if (!AudioCtx) return null;
+    if (!sharedAudioCtx || sharedAudioCtx.state === "closed") {
+      sharedAudioCtx = new AudioCtx();
     }
+    if (sharedAudioCtx.state === "suspended") {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    return sharedAudioCtx;
+  } catch {
+    return null;
+  }
+}
+
+function playChime(type: "success" | "error") {
+  try {
+    const ctx = getSharedAudioContext();
+    if (!ctx) return;
 
     if (type === "success") {
       // Pleasant harmonic ascending chime (C5 -> E5 -> G5)
@@ -83,11 +95,6 @@ function playChime(type: "success" | "error") {
       osc.start(ctx.currentTime);
       osc.stop(ctx.currentTime + 0.3);
     }
-
-    // Safely close audio context after chime completes to prevent resource leaks
-    setTimeout(() => {
-      ctx.close().catch(() => {});
-    }, 600);
   } catch {
     // Ignore audio context errors
   }
@@ -239,7 +246,6 @@ export default function AccessPointPage() {
   const {
     isLoaded: isDetectorLoaded,
     isInitializing: isDetectorInitializing,
-    faceDetected,
     detectionState,
     stabilityScore,
     guidanceMessage,
@@ -450,7 +456,7 @@ export default function AccessPointPage() {
                       ? `Rostro Enfocado (${stabilityScore}%) • No se mueva`
                       : isAutoMode
                       ? isDetectorLoaded
-                        ? "Escaneo Inteligente Activo"
+                        ? guidanceMessage || "Escaneo Inteligente Activo"
                         : isDetectorInitializing
                         ? "Cargando cámara..."
                         : "Escaneo Automático Activo"

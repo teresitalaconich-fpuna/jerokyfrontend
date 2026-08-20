@@ -17,11 +17,9 @@ import {
 import {
   fetchApi,
   ensureAuth,
-  EvaluationStage,
   saveGradesBatch,
   getGradesByCourse,
   getAcademicPeriods,
-  IAcademicPeriod,
   IGrade,
 } from "../../../../lib/api";
 import {
@@ -535,7 +533,7 @@ export default function CargarCalificacionesPage() {
             </div>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-slate-200">
-              <Table>
+              <Table className="min-w-[620px]">
                 <TableHeader className="bg-slate-50">
                   <TableRow>
                     <TableHead className="w-1/3 text-xs font-bold text-slate-700">

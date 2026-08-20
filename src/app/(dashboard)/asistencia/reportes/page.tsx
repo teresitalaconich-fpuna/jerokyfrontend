@@ -166,7 +166,7 @@ export default function AsistenciaReportesPage() {
         if (isMounted) {
           setAcademicPeriods(Array.isArray(periods) ? periods : []);
         }
-      } catch (err) {
+      } catch {
         if (isMounted) {
           setAcademicPeriods([]);
         }
@@ -239,9 +239,17 @@ export default function AsistenciaReportesPage() {
 
   // Trigger daily attendance load when date changes or modal opens
   useEffect(() => {
+    let active = true;
     if (isManualModalOpen && selectedCourse && selectedClassDate) {
-      loadDailyAttendances(selectedCourse, selectedClassDate);
+      Promise.resolve().then(() => {
+        if (active) {
+          loadDailyAttendances(selectedCourse, selectedClassDate);
+        }
+      });
     }
+    return () => {
+      active = false;
+    };
   }, [isManualModalOpen, selectedCourse, selectedClassDate, loadDailyAttendances]);
 
   // Filter courses by year if applicable, or show all
@@ -690,7 +698,7 @@ export default function AsistenciaReportesPage() {
                 : "No se encontraron inscripciones o registros de asistencia para este curso y período."}
             </div>
           ) : (
-            <Table>
+            <Table className="min-w-[650px]">
               <TableHeader>
                 <TableRow className="bg-slate-50/70">
                   <TableHead className="font-semibold text-slate-700">Alumna</TableHead>
@@ -769,14 +777,14 @@ export default function AsistenciaReportesPage() {
         </CardContent>
       </Card>
 
-      {/* Pase de Lista por Fecha - Modal Docente */}
+      {/* MANUAL ATTENDANCE MODAL BY DATE */}
       {isManualModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 animate-in fade-in duration-200">
-          <Card className="w-full max-w-3xl shadow-2xl bg-white max-h-[90vh] flex flex-col">
-            <CardHeader className="border-b border-slate-100 pb-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-3 sm:p-4 animate-in fade-in duration-200 overflow-y-auto">
+          <Card className="w-full max-w-2xl shadow-2xl bg-white rounded-2xl my-auto max-h-[90vh] flex flex-col">
+            <CardHeader className="border-b border-slate-100 p-4 sm:p-6 pb-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-xl flex items-center gap-2 text-slate-800">
+                  <CardTitle className="text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2">
                     <UserCheck className="h-5 w-5 text-primary" />
                     Pase de Lista Docente por Fecha
                   </CardTitle>
@@ -786,14 +794,14 @@ export default function AsistenciaReportesPage() {
                 </div>
                 <button 
                   onClick={() => setIsManualModalOpen(false)}
-                  className="text-slate-400 hover:text-slate-600 p-1 rounded-md transition-colors"
+                  className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-100 transition-colors"
                 >
                   <X className="h-5 w-5" />
                 </button>
               </div>
             </CardHeader>
 
-            <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">
+            <CardContent className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
               {/* Date Selector Bar */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div className="flex items-center gap-2">
@@ -852,7 +860,7 @@ export default function AsistenciaReportesPage() {
                   No hay alumnas matriculadas activas en este curso.
                 </div>
               ) : (
-                <Table>
+                <Table className="min-w-[550px]">
                   <TableHeader>
                     <TableRow className="bg-slate-50/70">
                       <TableHead className="font-semibold text-slate-700">Estudiante</TableHead>

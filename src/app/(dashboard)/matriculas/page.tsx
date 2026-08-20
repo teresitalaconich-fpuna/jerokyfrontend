@@ -656,8 +656,8 @@ export default function MatriculasPage() {
               No hay registros de matrículas almacenados en la base de datos.
             </div>
           ) : (
-            <>
-              <Table>
+            <div className="overflow-x-auto">
+              <Table className="min-w-[750px]">
                 <TableHeader className="bg-slate-50 border-b border-slate-100">
                   <TableRow>
                     <TableHead className="font-bold text-slate-700 pl-6">Alumno</TableHead>
@@ -759,7 +759,7 @@ export default function MatriculasPage() {
                   itemLabel="matrículas"
                 />
               </div>
-            </>
+            </div>
           )}
         </CardContent>
       </Card>

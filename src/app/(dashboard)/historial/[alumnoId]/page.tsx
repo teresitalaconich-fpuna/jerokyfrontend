@@ -10,7 +10,6 @@ import {
   FileDown, 
   ArrowLeft, 
   Calendar, 
-  GraduationCap, 
   CheckCircle2, 
   BookOpen, 
   User, 
@@ -510,7 +509,7 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
                       </div>
                     </div>
 
-                    <Table>
+                    <Table className="min-w-[700px]">
                       <TableHeader>
                         <TableRow className="bg-slate-50/70 border-b border-slate-200">
                           <TableHead className="font-bold text-slate-700">Modalidad / Curso</TableHead>
