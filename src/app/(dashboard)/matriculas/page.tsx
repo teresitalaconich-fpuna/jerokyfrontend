@@ -7,6 +7,7 @@ import { Label } from "../../../components/ui/label";
 import { Select } from "../../../components/ui/select";
 import { Input } from "../../../components/ui/input";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "../../../components/ui/table";
+import { Pagination } from "../../../components/ui/pagination";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "../../../components/ui/dialog";
 import { fetchApi, ensureAuth } from "../../../lib/api";
 import { 
@@ -109,8 +110,10 @@ export default function MatriculasPage() {
   const [receiptEnrollment, setReceiptEnrollment] = useState<Enrollment | null>(null);
   const [bulkReceiptEnrollments, setBulkReceiptEnrollments] = useState<Enrollment[]>([]);
 
-  // Search filter for historical registrations log at the bottom
+  // Search filter and pagination for historical registrations log at the bottom
   const [logSearchQuery, setLogSearchQuery] = useState("");
+  const [historyPage, setHistoryPage] = useState(1);
+  const [historyPageSize, setHistoryPageSize] = useState(10);
 
   const loadData = React.useCallback(async () => {
     try {
@@ -294,11 +297,24 @@ export default function MatriculasPage() {
   };
 
   // Filter logs for the bottom table
-  const filteredLogs = enrollments.filter(enroll => {
-    const studentName = `${enroll.student?.firstName} ${enroll.student?.lastName}`.toLowerCase();
-    const matchesSearch = studentName.includes(logSearchQuery.toLowerCase()) || enroll.student?.ci.includes(logSearchQuery);
-    return matchesSearch;
-  });
+  const filteredLogs = React.useMemo(() => {
+    const query = logSearchQuery.trim().toLowerCase();
+    if (!query) return enrollments;
+    return enrollments.filter((enroll) => {
+      const studentName = `${enroll.student?.firstName || ""} ${enroll.student?.lastName || ""}`.toLowerCase();
+      const ci = enroll.student?.ci || "";
+      return studentName.includes(query) || ci.includes(query);
+    });
+  }, [enrollments, logSearchQuery]);
+
+  const totalHistoryPages = Math.max(1, Math.ceil(filteredLogs.length / historyPageSize));
+  const safeHistoryPage = Math.min(Math.max(1, historyPage), totalHistoryPages);
+  const paginatedLogs = React.useMemo(() => {
+    return filteredLogs.slice(
+      (safeHistoryPage - 1) * historyPageSize,
+      safeHistoryPage * historyPageSize
+    );
+  }, [filteredLogs, safeHistoryPage, historyPageSize]);
 
 
 
@@ -626,7 +642,10 @@ export default function MatriculasPage() {
             <Input
               placeholder="Filtrar historial por alumno..."
               value={logSearchQuery}
-              onChange={(e) => setLogSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setLogSearchQuery(e.target.value);
+                setHistoryPage(1);
+              }}
               className="pl-9 bg-white"
             />
           </div>
@@ -637,97 +656,110 @@ export default function MatriculasPage() {
               No hay registros de matrículas almacenados en la base de datos.
             </div>
           ) : (
-            <Table>
-              <TableHeader className="bg-slate-50 border-b border-slate-100">
-                <TableRow>
-                  <TableHead className="font-bold text-slate-700 pl-6">Alumno</TableHead>
-                  <TableHead className="font-bold text-slate-700">Modalidad / Nivel</TableHead>
-                  <TableHead className="font-bold text-slate-700">Horario</TableHead>
-                  <TableHead className="font-bold text-slate-700">Aula</TableHead>
-                  <TableHead className="font-bold text-slate-700">Año Lectivo</TableHead>
-                  <TableHead className="font-bold text-slate-700">Estado</TableHead>
-                  <TableHead className="text-right font-bold text-slate-700 pr-6">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredLogs.map((log) => (
-                  <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                    <TableCell className="font-semibold text-slate-800 pl-6">
-                      {log.student?.firstName} {log.student?.lastName}
-                      <span className="block text-[10px] text-muted-foreground font-mono">CI: {log.student?.ci}</span>
-                    </TableCell>
-                    <TableCell>
-                      <div className="font-semibold text-slate-800">{log.course?.name}</div>
-                      <div className="text-[10px] text-slate-500 font-semibold">{log.course?.level}</div>
-                    </TableCell>
-                    <TableCell className="text-xs space-y-0.5">
-                      {log.course?.schedules?.map((s, idx) => (
-                        <div key={idx}>{s.dayOfWeek} {s.startTime}-{s.endTime}</div>
-                      ))}
-                    </TableCell>
-                    <TableCell className="text-xs space-y-0.5">
-                      {log.course?.schedules?.map((s, idx) => (
-                        <div key={idx}>{s.classroom}</div>
-                      ))}
-                    </TableCell>
-                    <TableCell className="font-bold text-slate-700">{log.course?.year}</TableCell>
-                    <TableCell>
-                      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
-                        log.status === "active" 
-                          ? "bg-emerald-100 text-emerald-800" 
-                          : log.status === "inactive" 
-                            ? "bg-red-100 text-red-800" 
-                            : "bg-amber-100 text-amber-800 border border-amber-200"
-                      }`}>
-                        {log.status === "active" ? "Activo" : log.status === "inactive" ? "Inactivo" : "Transferido"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right pr-6">
-                      <div className="flex justify-end gap-2">
-                        {/* Reprint receipt */}
-                        <Button
-                          onClick={() => setReceiptEnrollment(log)}
-                          size="sm"
-                          variant="outline"
-                          title="Ver Comprobante"
-                          className="flex items-center gap-1 border-slate-200"
-                        >
-                          <Receipt className="h-4 w-4" /> Comprobante
-                        </Button>
-
-                        {log.status === "active" && (
-                          <>
-                            {/* Transfer Button */}
-                            <Button
-                              onClick={() => {
-                                setErrorMsg("");
-                                setTransferCourseId(courses[0]?.id || "");
-                                setEnrollmentToTransfer(log);
-                              }}
-                              size="sm"
-                              variant="outline"
-                              className="text-amber-700 hover:text-amber-800 hover:bg-amber-50 border-amber-200"
-                            >
-                              <RefreshCw className="h-4 w-4 mr-1" /> Transferir
-                            </Button>
-
-                            {/* Drop Button */}
-                            <Button
-                              onClick={() => handleDrop(log.id)}
-                              size="sm"
-                              variant="outline"
-                              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
-                            >
-                              <Trash2 className="h-4 w-4 mr-1" /> Dar de Baja
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </TableCell>
+            <>
+              <Table>
+                <TableHeader className="bg-slate-50 border-b border-slate-100">
+                  <TableRow>
+                    <TableHead className="font-bold text-slate-700 pl-6">Alumno</TableHead>
+                    <TableHead className="font-bold text-slate-700">Modalidad / Nivel</TableHead>
+                    <TableHead className="font-bold text-slate-700">Horario</TableHead>
+                    <TableHead className="font-bold text-slate-700">Aula</TableHead>
+                    <TableHead className="font-bold text-slate-700">Año Lectivo</TableHead>
+                    <TableHead className="font-bold text-slate-700">Estado</TableHead>
+                    <TableHead className="text-right font-bold text-slate-700 pr-6">Acciones</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {paginatedLogs.map((log) => (
+                    <TableRow key={log.id} className="hover:bg-slate-50/50 transition-colors">
+                      <TableCell className="font-semibold text-slate-800 pl-6">
+                        {log.student?.firstName} {log.student?.lastName}
+                        <span className="block text-[10px] text-muted-foreground font-mono">CI: {log.student?.ci}</span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="font-semibold text-slate-800">{log.course?.name}</div>
+                        <div className="text-[10px] text-slate-500 font-semibold">{log.course?.level}</div>
+                      </TableCell>
+                      <TableCell className="text-xs space-y-0.5">
+                        {log.course?.schedules?.map((s, idx) => (
+                          <div key={idx}>{s.dayOfWeek} {s.startTime}-{s.endTime}</div>
+                        ))}
+                      </TableCell>
+                      <TableCell className="text-xs space-y-0.5">
+                        {log.course?.schedules?.map((s, idx) => (
+                          <div key={idx}>{s.classroom}</div>
+                        ))}
+                      </TableCell>
+                      <TableCell className="font-bold text-slate-700">{log.course?.year}</TableCell>
+                      <TableCell>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          log.status === "active" 
+                            ? "bg-emerald-100 text-emerald-800" 
+                            : log.status === "inactive" 
+                              ? "bg-red-100 text-red-800" 
+                              : "bg-amber-100 text-amber-800 border border-amber-200"
+                        }`}>
+                          {log.status === "active" ? "Activo" : log.status === "inactive" ? "Inactivo" : "Transferido"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right pr-6">
+                        <div className="flex justify-end gap-2">
+                          {/* Reprint receipt */}
+                          <Button
+                            onClick={() => setReceiptEnrollment(log)}
+                            size="sm"
+                            variant="outline"
+                            title="Ver Comprobante"
+                            className="flex items-center gap-1 border-slate-200"
+                          >
+                            <Receipt className="h-4 w-4" /> Comprobante
+                          </Button>
+
+                          {log.status === "active" && (
+                            <>
+                              {/* Transfer Button */}
+                              <Button
+                                onClick={() => {
+                                  setErrorMsg("");
+                                  setTransferCourseId(courses[0]?.id || "");
+                                  setEnrollmentToTransfer(log);
+                                }}
+                                size="sm"
+                                variant="outline"
+                                className="text-amber-700 hover:text-amber-800 hover:bg-amber-50 border-amber-200"
+                              >
+                                <RefreshCw className="h-4 w-4 mr-1" /> Transferir
+                              </Button>
+
+                              {/* Drop Button */}
+                              <Button
+                                onClick={() => handleDrop(log.id)}
+                                size="sm"
+                                variant="outline"
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" /> Dar de Baja
+                              </Button>
+                            </>
+                          )}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+              <div className="border-t border-slate-100 px-4 py-2 bg-slate-50/50">
+                <Pagination
+                  currentPage={safeHistoryPage}
+                  totalItems={filteredLogs.length}
+                  pageSize={historyPageSize}
+                  onPageChange={setHistoryPage}
+                  onPageSizeChange={setHistoryPageSize}
+                  pageSizeOptions={[10, 25, 50, 100]}
+                  itemLabel="matrículas"
+                />
+              </div>
+            </>
           )}
         </CardContent>
       </Card>

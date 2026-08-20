@@ -18,6 +18,7 @@ import { Checkbox } from "../../../components/ui/checkbox";
 import { fetchApi, ensureAuth } from "../../../lib/api";
 import { Plus, Search, FileText, Edit, Power, X, User, Phone, ShieldCheck, Camera, CheckCircle2, AlertCircle } from "lucide-react";
 import FaceEnrollmentModal from "../../../components/biometrics/FaceEnrollmentModal";
+import { Pagination } from "../../../components/ui/pagination";
 
 interface StudentData {
   id: string;
@@ -57,6 +58,10 @@ export default function AlumnosPage() {
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [enrollingStudent, setEnrollingStudent] = useState<StudentData | null>(null);
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Edit Modal State
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
@@ -215,11 +220,21 @@ export default function AlumnosPage() {
     }
   };
 
-  const filteredStudents = students.filter(student => {
-    const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
-    const ciMatch = student.ci.includes(search);
-    return fullName.includes(search.toLowerCase()) || ciMatch;
-  });
+  const filteredStudents = React.useMemo(() => {
+    const query = search.trim().toLowerCase();
+    if (!query) return students;
+    return students.filter((student) => {
+      const fullName = `${student.firstName} ${student.lastName}`.toLowerCase();
+      const ciMatch = student.ci.includes(query);
+      return fullName.includes(query) || ciMatch;
+    });
+  }, [students, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredStudents.length / pageSize));
+  const safePage = Math.min(Math.max(1, currentPage), totalPages);
+  const paginatedStudents = React.useMemo(() => {
+    return filteredStudents.slice((safePage - 1) * pageSize, safePage * pageSize);
+  }, [filteredStudents, safePage, pageSize]);
 
   const editingAge = calculateAge(editBirthDate);
   const editingIsMinor = editingAge !== null && editingAge < 18;
@@ -246,7 +261,10 @@ export default function AlumnosPage() {
               <Input
                 placeholder="Buscar por nombre o CI..."
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                  setCurrentPage(1);
+                }}
                 className="pl-9"
               />
             </div>
@@ -258,20 +276,21 @@ export default function AlumnosPage() {
           ) : filteredStudents.length === 0 ? (
             <div className="py-10 text-center text-sm text-slate-500">No se encontraron alumnos registrados.</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Nombre</TableHead>
-                  <TableHead>Cédula (CI)</TableHead>
-                  <TableHead>Fecha de Nacimiento</TableHead>
-                  <TableHead>Estado</TableHead>
-                  <TableHead>Biometría Facial</TableHead>
-                  <TableHead>Tutor / Responsable Legal</TableHead>
-                  <TableHead className="text-right">Acciones</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredStudents.map((student) => {
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Nombre</TableHead>
+                    <TableHead>Cédula (CI)</TableHead>
+                    <TableHead>Fecha de Nacimiento</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Biometría Facial</TableHead>
+                    <TableHead>Tutor / Responsable Legal</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {paginatedStudents.map((student) => {
                   const isActive = student.status !== "inactive";
                   const hasFace = Boolean(student.biometricTemplateId);
                   return (
@@ -362,6 +381,18 @@ export default function AlumnosPage() {
                 })}
               </TableBody>
             </Table>
+            <div className="border-t border-slate-100 mt-3 pt-2">
+              <Pagination
+                currentPage={safePage}
+                totalItems={filteredStudents.length}
+                pageSize={pageSize}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={setPageSize}
+                pageSizeOptions={[10, 25, 50, 100]}
+                itemLabel="alumnos"
+              />
+            </div>
+          </>
           )}
         </CardContent>
       </Card>
