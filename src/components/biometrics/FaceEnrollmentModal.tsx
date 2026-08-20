@@ -150,11 +150,11 @@ export default function FaceEnrollmentModal({
         {/* Header */}
         <div className="px-6 py-4 bg-slate-900 text-white flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-accent/20 text-accent rounded-lg">
+            <div className="p-2 bg-[#2C58A2]/30 text-[#38BDF8] rounded-xl border border-[#2C58A2]/40">
               <Camera className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="font-bold text-base leading-snug">Enrolamiento Biométrico Facial</h3>
+              <h3 className="font-extrabold text-base leading-snug">Enrolamiento Biométrico Facial</h3>
               <p className="text-xs text-slate-400">
                 {student.firstName} {student.lastName} (CI: {student.ci})
               </p>
@@ -171,7 +171,7 @@ export default function FaceEnrollmentModal({
         {/* Body Content */}
         <div className="p-6 overflow-y-auto space-y-4">
           {/* Status Badge */}
-          <div className="flex items-center justify-between p-3 rounded-lg border bg-slate-50 border-slate-200 text-xs">
+          <div className="flex items-center justify-between p-3 rounded-xl border bg-slate-50 border-slate-200 text-xs">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-slate-500" />
               <span className="font-medium text-slate-700">Estado Biométrico:</span>
@@ -189,14 +189,14 @@ export default function FaceEnrollmentModal({
 
           {/* Feedback Alerts */}
           {error && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 flex items-start gap-2 animate-in fade-in">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 flex items-start gap-2 animate-in fade-in">
               <AlertTriangle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
               <div className="flex-1">{error}</div>
             </div>
           )}
 
           {success && (
-            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-lg text-xs text-emerald-800 flex items-start gap-2 animate-in fade-in">
+            <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 flex items-start gap-2 animate-in fade-in">
               <CheckCircle className="h-4 w-4 text-emerald-600 shrink-0 mt-0.5" />
               <div className="flex-1 font-semibold">{success}</div>
             </div>
@@ -204,16 +204,16 @@ export default function FaceEnrollmentModal({
 
           {/* Mode Switcher */}
           {!capturedImage && (
-            <div className="flex rounded-lg bg-slate-100 p-1 border border-slate-200">
+            <div className="flex rounded-xl bg-slate-100 p-1 border border-slate-200">
               <button
                 type="button"
                 onClick={() => {
                   setMode("camera");
                   setError(null);
                 }}
-                className={`flex-1 py-1.5 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                   mode === "camera"
-                    ? "bg-white text-slate-900 shadow-xs"
+                    ? "bg-white text-[#2C58A2] shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -225,9 +225,9 @@ export default function FaceEnrollmentModal({
                   setMode("upload");
                   setError(null);
                 }}
-                className={`flex-1 py-1.5 rounded-md text-xs font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                   mode === "upload"
-                    ? "bg-white text-slate-900 shadow-xs"
+                    ? "bg-white text-[#2C58A2] shadow-xs"
                     : "text-slate-600 hover:text-slate-900"
                 }`}
               >
@@ -237,7 +237,7 @@ export default function FaceEnrollmentModal({
           )}
 
           {/* Capture / Preview Viewport */}
-          <div className="relative aspect-4/3 w-full bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border-2 border-slate-800 shadow-inner">
+          <div className="relative aspect-4/3 w-full bg-slate-950 rounded-2xl overflow-hidden flex items-center justify-center border-2 border-slate-800 shadow-inner">
             {capturedImage ? (
               /* Captured Image Preview */
               <div className="relative w-full h-full">
@@ -265,7 +265,7 @@ export default function FaceEnrollmentModal({
                 />
                 {/* Oval Face Guide Overlay */}
                 <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
-                  <div className="w-48 h-60 border-2 border-dashed border-accent rounded-[50%] shadow-[0_0_20px_rgba(249,115,22,0.4)] animate-pulse flex items-center justify-center" />
+                  <div className="w-48 h-60 border-2 border-dashed border-[#38BDF8] rounded-[50%] shadow-[0_0_20px_rgba(56,189,248,0.4)] animate-pulse flex items-center justify-center" />
                   <p className="mt-3 text-[11px] text-white/90 font-medium bg-black/60 px-3 py-1 rounded-full backdrop-blur-xs">
                     Centre el rostro dentro del óvalo
                   </p>
@@ -277,7 +277,7 @@ export default function FaceEnrollmentModal({
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full h-full flex flex-col items-center justify-center p-6 text-center cursor-pointer hover:bg-slate-900/60 transition-colors"
               >
-                <div className="p-4 bg-slate-800 text-accent rounded-full mb-3">
+                <div className="p-4 bg-slate-800 text-[#38BDF8] rounded-full mb-3">
                   <Upload className="h-8 w-8" />
                 </div>
                 <p className="text-sm font-semibold text-slate-200">
@@ -297,9 +297,9 @@ export default function FaceEnrollmentModal({
             )}
           </div>
 
-          <div className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-2.5 rounded-lg border border-slate-200">
-            <div className="flex items-center gap-1.5 font-semibold text-slate-700 mb-0.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-accent" /> Recomendaciones para mejor precisión:
+          <div className="text-[11px] text-slate-500 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200">
+            <div className="flex items-center gap-1.5 font-bold text-slate-700 mb-0.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-[#2C58A2]" /> Recomendaciones para mejor precisión:
             </div>
             Rostro despejado, buena iluminación frontal, sin gafas de sol ni accesorios que cubran ojos o boca.
           </div>
@@ -315,7 +315,7 @@ export default function FaceEnrollmentModal({
                 size="sm"
                 onClick={handleDeleteFace}
                 disabled={loading}
-                className="text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5"
+                className="text-xs text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 flex items-center gap-1.5 rounded-xl"
               >
                 <Trash2 className="h-3.5 w-3.5" />
                 Eliminar Rostro
@@ -330,7 +330,7 @@ export default function FaceEnrollmentModal({
               size="sm"
               onClick={handleClose}
               disabled={loading}
-              className="text-xs"
+              className="text-xs rounded-xl"
             >
               Cancelar
             </Button>
@@ -343,7 +343,7 @@ export default function FaceEnrollmentModal({
                   size="sm"
                   onClick={() => setCapturedImage(null)}
                   disabled={loading}
-                  className="text-xs flex items-center gap-1"
+                  className="text-xs flex items-center gap-1 rounded-xl"
                 >
                   <RefreshCw className="h-3.5 w-3.5" />
                   Tomar Otra Foto
@@ -353,7 +353,7 @@ export default function FaceEnrollmentModal({
                   size="sm"
                   onClick={handleSaveFace}
                   disabled={loading}
-                  className="text-xs font-bold bg-accent hover:bg-accent/90 text-white flex items-center gap-1.5 shadow"
+                  className="text-xs font-bold bg-[#2C58A2] hover:bg-[#224683] text-white flex items-center gap-1.5 shadow-xs rounded-xl"
                 >
                   {loading ? (
                     <>
@@ -371,7 +371,7 @@ export default function FaceEnrollmentModal({
                 type="button"
                 size="sm"
                 onClick={handleCapture}
-                className="text-xs font-bold bg-accent hover:bg-accent/90 text-white flex items-center gap-1.5 shadow"
+                className="text-xs font-bold bg-[#2C58A2] hover:bg-[#224683] text-white flex items-center gap-1.5 shadow-xs rounded-xl"
               >
                 <Camera className="h-3.5 w-3.5" />
                 Capturar Foto
@@ -381,7 +381,7 @@ export default function FaceEnrollmentModal({
                 type="button"
                 size="sm"
                 onClick={() => fileInputRef.current?.click()}
-                className="text-xs font-bold bg-accent hover:bg-accent/90 text-white flex items-center gap-1.5 shadow"
+                className="text-xs font-bold bg-[#2C58A2] hover:bg-[#224683] text-white flex items-center gap-1.5 shadow-xs rounded-xl"
               >
                 <Upload className="h-3.5 w-3.5" />
                 Seleccionar Archivo

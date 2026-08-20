@@ -2,20 +2,22 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/card";
-import { Input } from "../../components/ui/input";
+import { Card, CardContent } from "../../components/ui/card";
 import { Label } from "../../components/ui/label";
 import { Button } from "../../components/ui/button";
 import { fetchApi } from "../../lib/api";
-import { GraduationCap } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff, AlertCircle, Info, X } from "lucide-react";
 import { useAuth, UserProfile } from "../../lib/auth-context";
+import { JerokyBrandHeader } from "../../components/ui/logo";
 
 export default function LoginPage() {
   const router = useRouter();
   const { user, loading, login, logout } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [forgotNotice, setForgotNotice] = useState(false);
   const [loadingSubmit, setLoadingSubmit] = useState(false);
 
   useEffect(() => {
@@ -66,64 +68,119 @@ export default function LoginPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-          <p className="text-sm text-muted-foreground font-semibold">Cargando...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#2C58A2] mx-auto"></div>
+          <p className="text-sm text-slate-500 font-semibold">Cargando...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-md border border-slate-200 shadow-xl">
-        <CardHeader className="text-center space-y-2 pb-6">
-          <div className="mx-auto p-3 bg-primary text-primary-foreground rounded-xl w-fit">
-            <GraduationCap className="h-8 w-8" />
-          </div>
-          <div>
-            <CardTitle className="text-2xl font-bold tracking-tight text-slate-800">JEROKY SOFT</CardTitle>
-            <CardDescription className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">
-              Academia de Danza Jeroky
-            </CardDescription>
-          </div>
-        </CardHeader>
-        <form onSubmit={handleLogin}>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="p-3 text-xs text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive">
-                {error}
+    <div className="min-h-screen bg-[#F8FAFC] flex items-center justify-center p-4 sm:p-6">
+      <Card className="w-full max-w-[440px] border border-slate-200/80 bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-6 sm:p-10">
+        {/* Header con Logo y Marca */}
+        <JerokyBrandHeader stacked logoSize={112} className="mb-8" />
+
+        <form onSubmit={handleLogin} className="space-y-5">
+          {error && (
+            <div className="p-3.5 text-xs font-medium text-red-700 bg-red-50 rounded-xl border border-red-200 flex items-start gap-2 animate-in fade-in duration-200">
+              <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          {forgotNotice && (
+            <div className="p-3.5 text-xs font-medium text-blue-800 bg-blue-50 rounded-xl border border-blue-200 flex items-start justify-between gap-2 animate-in fade-in duration-200">
+              <div className="flex items-start gap-2">
+                <Info className="h-4 w-4 text-[#2C58A2] shrink-0 mt-0.5" />
+                <span>Por favor contacte al administrador del sistema para restablecer sus credenciales de acceso.</span>
               </div>
-            )}
-            
-            <div className="space-y-1">
-              <Label htmlFor="email">Correo Electrónico</Label>
-              <Input
+              <button
+                type="button"
+                onClick={() => setForgotNotice(false)}
+                className="text-blue-500 hover:text-blue-700 p-0.5 rounded-md"
+                aria-label="Cerrar aviso"
+              >
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
+
+          {/* Campo de Correo Electrónico */}
+          <div className="space-y-1.5">
+            <Label htmlFor="email" className="text-sm font-bold text-slate-800">
+              Correo Electrónico
+            </Label>
+            <div className="relative flex items-center">
+              <div className="absolute left-3.5 text-[#2C58A2] pointer-events-none">
+                <Mail className="h-5 w-5" />
+              </div>
+              <input
                 id="email"
                 type="email"
                 placeholder="ejemplo@jeroky.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2C58A2] focus:ring-3 focus:ring-[#2C58A2]/15 transition-all"
               />
             </div>
+          </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="password">Contraseña</Label>
-              <Input
+          {/* Campo de Contraseña */}
+          <div className="space-y-1.5">
+            <Label htmlFor="password" className="text-sm font-bold text-slate-800">
+              Contraseña
+            </Label>
+            <div className="relative flex items-center">
+              <div className="absolute left-3.5 text-[#2C58A2] pointer-events-none">
+                <Lock className="h-5 w-5" />
+              </div>
+              <input
                 id="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                className="w-full pl-11 pr-11 py-3 bg-white border border-slate-200 rounded-xl text-sm font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-[#2C58A2] focus:ring-3 focus:ring-[#2C58A2]/15 transition-all"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 text-[#2C58A2] hover:text-[#1E3A8A] transition-colors p-1"
+                aria-label={showPassword ? "Ocultar contraseña" : "Ver contraseña"}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
-          </CardContent>
-          <CardFooter className="pt-2">
-            <Button type="submit" className="w-full font-bold" disabled={loadingSubmit}>
-              {loadingSubmit ? "Iniciando sesión..." : "Iniciar Sesión"}
+          </div>
+
+          {/* Botón Iniciar Sesión */}
+          <div className="pt-2">
+            <Button
+              type="submit"
+              disabled={loadingSubmit}
+              className="w-full py-3.5 h-auto text-base font-bold bg-[#2C58A2] hover:bg-[#224683] text-white rounded-xl shadow-md hover:shadow-lg transition-all"
+            >
+              {loadingSubmit ? "Iniciando Sesión..." : "Iniciar Sesión"}
             </Button>
-          </CardFooter>
+          </div>
+
+          {/* Enlace Olvidaste tu contraseña */}
+          <div className="text-center pt-1">
+            <button
+              type="button"
+              onClick={() => setForgotNotice(true)}
+              className="text-sm font-medium text-[#2C58A2] hover:text-[#1E3A8A] hover:underline transition-colors"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </form>
       </Card>
     </div>

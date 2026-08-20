@@ -617,7 +617,7 @@ export default function OfertaAcademicaPage() {
                                     {s.startTime} – {s.endTime}
                                   </span>
                                   <span className="flex items-center gap-1 font-semibold">
-                                    <MapPin className="h-3.5 w-3.5 text-accent" />
+                                    <MapPin className="h-3.5 w-3.5 text-[#2C58A2]" />
                                     {s.classroom}
                                   </span>
                                 </div>

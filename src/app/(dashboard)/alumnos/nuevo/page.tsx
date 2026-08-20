@@ -443,7 +443,7 @@ export default function NuevoAlumnoPage() {
               <div className="flex flex-col gap-2.5 pt-2">
                 <Button
                   onClick={() => setShowFaceModal(true)}
-                  className="w-full py-6 font-bold text-sm bg-accent hover:bg-accent/90 text-white flex items-center justify-center gap-2 shadow-md"
+                  className="w-full py-6 font-bold text-sm bg-[#2C58A2] hover:bg-[#224683] text-white flex items-center justify-center gap-2 shadow-md rounded-xl"
                 >
                   <Camera className="h-5 w-5" /> Capturar Rostro con Cámara Ahora
                 </Button>

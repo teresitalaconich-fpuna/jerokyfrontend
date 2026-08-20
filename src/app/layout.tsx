@@ -14,8 +14,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Jeroky Soft - Centro de Danzas Jeroky Paraguay",
-  description: "Sistema de gestión académica digital para el Centro de Danzas Jeroky Paraguay.",
+  title: "Jeroky Soft - Academia de Danza Jeroky Paraguai",
+  description: "Sistema de gestión académica, control biométrico y comunicaciones para la Academia de Danza Jeroky Paraguai.",
+  icons: {
+    icon: "/logo.svg",
+  },
 };
 
 export default function RootLayout({

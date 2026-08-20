@@ -20,6 +20,7 @@ import {
   Camera
 } from "lucide-react";
 import FaceEnrollmentModal from "../../../../components/biometrics/FaceEnrollmentModal";
+import { JerokyLogo } from "../../../../components/ui/logo";
 
 interface TutorInfo {
   id?: string;
@@ -327,14 +328,14 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
           <CardHeader className="bg-slate-50/90 border-b border-slate-200 print:bg-transparent print:border-b-2 print:border-slate-800 py-6">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
               <div>
-                <div className="flex items-center gap-2.5">
-                  <GraduationCap className="h-8 w-8 text-primary" />
+                <div className="flex items-center gap-3">
+                  <JerokyLogo size={42} />
                   <div>
-                    <CardTitle className="text-2xl font-black tracking-tight text-primary">
+                    <CardTitle className="text-2xl font-extrabold tracking-tight text-slate-900 leading-none">
                       JEROKY SOFT
                     </CardTitle>
-                    <p className="text-xs font-bold text-accent tracking-wider uppercase">
-                      Centro de Danzas Jeroky Paraguay
+                    <p className="text-xs font-bold text-[#2C58A2] tracking-wider uppercase mt-1">
+                      Academia de Danza Jeroky Paraguai
                     </p>
                   </div>
                 </div>
@@ -398,9 +399,9 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
                           size="sm"
                           variant="outline"
                           onClick={() => setShowFaceModal(true)}
-                          className="h-6 px-2 text-[11px] font-bold text-accent border-accent/40 hover:bg-accent/10 ml-1 print:hidden"
+                          className="h-6 px-2 text-[11px] font-bold text-[#2C58A2] border-blue-200 bg-blue-50/50 hover:bg-blue-100 ml-1 print:hidden rounded-lg"
                         >
-                          <Camera className="h-3 w-3 mr-1" />
+                          <Camera className="h-3 w-3 mr-1 text-[#2C58A2]" />
                           {student.biometricTemplateId ? "Actualizar Rostro" : "Capturar Rostro"}
                         </Button>
                       </span>

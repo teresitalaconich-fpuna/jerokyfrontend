@@ -194,7 +194,7 @@ export default function ExportarMECPage() {
       <Card className="border-slate-200 shadow-sm">
         <CardHeader className="bg-slate-50/70 border-b border-slate-200">
           <div className="flex items-center gap-3">
-            <FileCheck2 className="h-8 w-8 text-accent" />
+            <FileCheck2 className="h-8 w-8 text-[#2C58A2]" />
             <div>
               <CardTitle className="text-lg font-bold text-slate-900">
                 Planillas y Registro de Calificaciones
@@ -367,7 +367,7 @@ export default function ExportarMECPage() {
           <Button
             onClick={handleExport}
             disabled={loading}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-5 bg-accent hover:bg-accent/90 text-white font-bold shadow transition-all"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-5 bg-[#2C58A2] hover:bg-[#224683] text-white font-bold rounded-xl shadow transition-all"
           >
             {loading ? (
               <>

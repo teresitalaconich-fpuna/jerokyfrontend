@@ -310,19 +310,19 @@ export default function MatriculasPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans">
       {/* Title */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 print:hidden">
         <div>
-          <h1 className="text-3xl font-bold text-slate-800">Terminal de Inscripción (Matrículas)</h1>
-          <p className="text-sm text-muted-foreground">Registre alumnos en la oferta académica activa y emita comprobantes.</p>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">Terminal de Inscripción (Matrículas)</h1>
+          <p className="text-xs sm:text-sm text-slate-500 font-medium mt-0.5">Registre alumnos en la oferta académica activa y emita comprobantes.</p>
         </div>
       </div>
 
       {/* Main Alert Banners */}
       {errorMsg && (
-        <div className="p-4 text-sm text-red-800 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3 shadow-sm print:hidden">
-          <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0 mt-0.5" />
+        <div className="p-4 text-xs font-medium text-red-800 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 shadow-xs print:hidden animate-in fade-in">
+          <AlertTriangle className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold">Error en la validación</p>
             <p>{errorMsg}</p>
@@ -331,8 +331,8 @@ export default function MatriculasPage() {
       )}
 
       {successMsg && (
-        <div className="p-4 text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl flex items-start gap-3 shadow-sm print:hidden">
-          <CheckCircle className="h-5 w-5 text-emerald-600 flex-shrink-0 mt-0.5" />
+        <div className="p-4 text-xs font-medium text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-start gap-3 shadow-xs print:hidden animate-in fade-in">
+          <CheckCircle className="h-5 w-5 text-emerald-600 shrink-0 mt-0.5" />
           <div>
             <p className="font-bold">Acción exitosa</p>
             <p>{successMsg}</p>
@@ -347,33 +347,33 @@ export default function MatriculasPage() {
         <div className="lg:col-span-1 space-y-6">
           
           {/* Autocomplete Student Search Card */}
-          <Card className="border border-slate-200 shadow-md rounded-xl overflow-visible relative">
-            <CardHeader className="pb-4">
-              <CardTitle className="text-slate-800 text-base flex items-center gap-2">
-                <User className="h-5 w-5 text-primary" /> Paso 1: Seleccionar Alumno
+          <Card className="border border-slate-200/90 shadow-xs rounded-2xl overflow-visible relative bg-white">
+            <CardHeader className="pb-3.5 pt-5 px-5">
+              <CardTitle className="text-slate-900 text-sm font-bold flex items-center gap-2">
+                <User className="h-4 w-4 text-slate-800" /> Paso 1: Seleccionar Alumno
               </CardTitle>
-              <CardDescription>Busque y seleccione el alumno para la inscripción.</CardDescription>
+              <CardDescription className="text-xs text-slate-500">Busque y seleccione al alumno para la inscripción.</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 px-5 pb-5">
               {/* Autocomplete Input */}
               <div className="relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
                 <Input
-                  placeholder="Escriba nombre o cédula..."
+                  placeholder="Buscar por nombre o cédula..."
                   value={studentSearchQuery}
                   onChange={(e) => {
                     setStudentSearchQuery(e.target.value);
                     setIsStudentDropdownOpen(true);
                   }}
                   onFocus={() => setIsStudentDropdownOpen(true)}
-                  className="pl-9"
+                  className="pl-10 h-10 rounded-xl border-slate-200 text-xs font-medium text-slate-900 focus:border-[#2C58A2] focus:ring-2 focus:ring-[#2C58A2]/15"
                 />
 
                 {/* Suggestions Dropdown */}
                 {isStudentDropdownOpen && studentSearchQuery && (
-                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-56 overflow-y-auto z-50">
+                  <div className="absolute left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-56 overflow-y-auto z-50">
                     {filteredStudentSuggestions.length === 0 ? (
-                      <div className="p-3 text-xs text-muted-foreground text-center">
+                      <div className="p-3 text-xs text-slate-400 text-center">
                         No se encontraron alumnos activos
                       </div>
                     ) : (
@@ -390,8 +390,8 @@ export default function MatriculasPage() {
                           className="w-full text-left p-2.5 hover:bg-slate-50 transition-colors border-b border-slate-100 last:border-0 flex justify-between items-center text-xs"
                         >
                           <div>
-                            <p className="font-bold text-slate-800">{s.firstName} {s.lastName}</p>
-                            <p className="text-[10px] text-muted-foreground font-semibold">CI N°: {s.ci}</p>
+                            <p className="font-bold text-slate-900">{s.firstName} {s.lastName}</p>
+                            <p className="text-[10px] text-slate-500 font-semibold">CI N°: {s.ci}</p>
                           </div>
                           <ChevronRight className="h-4 w-4 text-slate-400" />
                         </button>
@@ -403,39 +403,39 @@ export default function MatriculasPage() {
 
               {/* Selected Student profile info */}
               {selectedStudent && (
-                <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <div className="p-4 bg-slate-50/80 border border-slate-200 rounded-xl space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center font-extrabold text-primary text-sm">
+                    <div className="w-10 h-10 bg-slate-200 text-slate-800 rounded-full flex items-center justify-center font-extrabold text-xs shadow-2xs shrink-0">
                       {selectedStudent.firstName[0]}{selectedStudent.lastName[0]}
                     </div>
                     <div>
-                      <h4 className="font-bold text-slate-800 leading-tight text-sm">
+                      <h4 className="font-extrabold text-slate-900 leading-tight text-sm">
                         {selectedStudent.firstName} {selectedStudent.lastName}
                       </h4>
-                      <p className="text-[10px] text-muted-foreground font-semibold">CI N°: {selectedStudent.ci}</p>
+                      <p className="text-[11px] text-slate-500 font-semibold">CI N°: {selectedStudent.ci}</p>
                     </div>
                   </div>
 
                   {selectedStudent.tutor && (
-                    <div className="text-[10px] border-t border-slate-200 pt-2 text-slate-600">
-                      <p className="font-bold text-muted-foreground">Tutor Legal:</p>
-                      <p className="font-semibold text-slate-800">{selectedStudent.tutor.firstName} {selectedStudent.tutor.lastName} ({selectedStudent.tutor.phone})</p>
+                    <div className="text-xs border-t border-slate-200/80 pt-2.5 text-slate-600">
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Tutor Legal:</p>
+                      <p className="font-semibold text-slate-800 text-xs mt-0.5">{selectedStudent.tutor.firstName} {selectedStudent.tutor.lastName} ({selectedStudent.tutor.phone})</p>
                     </div>
                   )}
 
-                  {/* Current Active Enrollments list (Trazabilidad) */}
-                  <div className="border-t border-slate-200 pt-2 space-y-1">
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">Cursos del Alumno:</p>
+                  {/* Current Active Enrollments list */}
+                  <div className="border-t border-slate-200/80 pt-2.5 space-y-1.5">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Cursos del Alumno:</p>
                     {enrollments.filter(e => e.studentId === selectedStudent.id && e.status === "active").length === 0 ? (
-                      <p className="text-[10px] text-slate-500 italic">No está matriculado en ningún curso activo.</p>
+                      <p className="text-xs text-slate-400 italic">No está matriculado en ningún curso activo.</p>
                     ) : (
                       <div className="space-y-1">
                         {enrollments
                           .filter(e => e.studentId === selectedStudent.id && e.status === "active")
                           .map(e => (
-                            <div key={e.id} className="flex justify-between items-center text-[10px] bg-white border border-slate-100 p-1.5 rounded">
-                              <span className="font-bold text-slate-700">{e.course?.name} ({e.course?.level})</span>
-                              <span className="text-[9px] font-bold text-primary">Año {e.course?.year}</span>
+                            <div key={e.id} className="flex justify-between items-center text-xs bg-white border border-slate-200/70 px-2.5 py-1.5 rounded-lg shadow-2xs">
+                              <span className="font-bold text-slate-800">{e.course?.name} ({e.course?.level})</span>
+                              <span className="text-[10px] font-bold text-[#2C58A2] bg-blue-50 px-2 py-0.5 rounded">Año {e.course?.year}</span>
                             </div>
                           ))
                         }
@@ -447,34 +447,45 @@ export default function MatriculasPage() {
             </CardContent>
           </Card>
 
-          {/* Selection Cart/Checkout Card */}
-          <Card className="border border-slate-200 shadow-md rounded-xl overflow-hidden">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-              <CardTitle className="text-slate-800 text-base flex items-center gap-2">
-                <Layers className="h-5 w-5 text-primary" /> Paso 3: Resumen y Confirmación
+          {/* Selection Cart/Checkout Card - Step 3 */}
+          <Card className="border border-slate-200/90 shadow-xs rounded-2xl overflow-hidden bg-white">
+            <CardHeader className="bg-slate-50/40 border-b border-slate-100 pb-3.5 pt-5 px-5">
+              <CardTitle className="text-slate-900 text-sm font-bold flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-slate-800" /> Paso 3: Resumen y Confirmación
               </CardTitle>
-              <CardDescription>Clases y modalidades seleccionadas para la matrícula.</CardDescription>
+              <CardDescription className="text-xs text-slate-500">Clases seleccionadas para registrar en lote.</CardDescription>
             </CardHeader>
-            <CardContent className="p-4 space-y-4">
+            <CardContent className="p-5 space-y-4">
+              {/* Periodo de Matrícula Field */}
+              <div className="space-y-1">
+                <Label className="text-xs font-bold text-slate-800">
+                  Periodo de Matrícula *
+                </Label>
+                <Input
+                  value={`${new Date().getFullYear()}-I`}
+                  readOnly
+                  className="bg-slate-50 border-slate-200 rounded-xl text-xs font-bold text-slate-800"
+                />
+              </div>
 
               {cart.length === 0 ? (
-                <div className="p-8 border border-dashed border-slate-200 text-center rounded-xl text-xs text-muted-foreground space-y-1 bg-slate-50/30">
-                  <Layers className="h-8 w-8 text-slate-300 mx-auto" />
-                  <p className="font-bold text-slate-500">No hay clases seleccionadas</p>
-                  <p>Agregue clases desde la oferta académica a la derecha</p>
+                <div className="p-6 border border-dashed border-slate-200 text-center rounded-xl text-xs text-slate-400 space-y-1 bg-slate-50/40">
+                  <Layers className="h-7 w-7 text-slate-300 mx-auto" />
+                  <p className="font-bold text-slate-600">No hay clases seleccionadas</p>
+                  <p className="text-[11px]">Seleccione clases de la oferta académica</p>
                 </div>
               ) : (
                 <div className="space-y-2 max-h-56 overflow-y-auto">
                   {cart.map(c => (
-                    <div key={c.id} className="p-2.5 bg-slate-50 border border-slate-200 rounded-lg flex justify-between items-center text-xs">
+                    <div key={c.id} className="p-3 bg-slate-50 border border-slate-200/90 rounded-xl flex justify-between items-start text-xs shadow-2xs">
                       <div>
-                        <p className="font-bold text-slate-800">{c.name}</p>
-                        <p className="text-[10px] text-muted-foreground font-semibold">{c.level}</p>
-                        <div className="text-[10px] text-slate-500 font-semibold mt-0.5 space-y-0.5">
+                        <p className="font-bold text-slate-900">{c.name}</p>
+                        <p className="text-[10px] text-slate-500 font-semibold">{c.level}</p>
+                        <div className="text-[10px] text-slate-500 font-medium mt-1 space-y-0.5">
                           {c.schedules?.map((s, idx) => (
                             <div key={idx} className="flex items-center gap-1">
-                              <span>{s.dayOfWeek} {s.startTime}-{s.endTime}</span>
-                              <span className="text-slate-350">·</span>
+                              <span>{s.dayOfWeek} {s.startTime}–{s.endTime}</span>
+                              <span className="text-slate-300">·</span>
                               <span>{s.classroom}</span>
                             </div>
                           ))}
@@ -482,20 +493,21 @@ export default function MatriculasPage() {
                       </div>
                       <button 
                         onClick={() => removeFromCart(c.id)}
-                        className="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50"
+                        className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 transition-colors"
+                        title="Eliminar de la selección"
                       >
-                        <X className="h-4.5 w-4.5" />
+                        <X className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
                 </div>
               )}
             </CardContent>
-            <CardContent className="pt-0 border-t border-slate-100 bg-slate-50/30 p-4">
+            <CardContent className="pt-0 border-t border-slate-100 bg-slate-50/40 p-5">
               <Button 
                 onClick={handleCheckoutEnrollment}
                 disabled={checkoutLoading || cart.length === 0 || !selectedStudent}
-                className="w-full font-bold py-5 flex items-center justify-center gap-2"
+                className="w-full font-extrabold py-3.5 h-auto text-xs bg-[#2C58A2] hover:bg-[#224683] text-white rounded-xl shadow-md uppercase tracking-wider flex items-center justify-center gap-2"
               >
                 {checkoutLoading ? "PROCESANDO MATRÍCULA..." : "CONFIRMAR MATRÍCULA"}
               </Button>
@@ -503,21 +515,21 @@ export default function MatriculasPage() {
           </Card>
         </div>
 
-        {/* SECTION 2: CLASSES GRID & SEMAFORO (Right Column) */}
+        {/* SECTION 2: CLASSES GRID & SEMAFORO (Right Column) - Step 2 */}
         <div className="lg:col-span-2 space-y-6">
-          <Card className="border border-slate-200 shadow-md rounded-xl overflow-hidden h-full flex flex-col">
-            <CardHeader className="bg-slate-50/50 border-b border-slate-100 pb-4">
-              <CardTitle className="text-slate-800 text-base flex items-center gap-2">
-                <Calendar className="h-5 w-5 text-primary" /> Paso 2: Seleccionar Clases (Oferta Académica)
+          <Card className="border border-slate-200/90 shadow-xs rounded-2xl overflow-hidden h-full flex flex-col bg-white">
+            <CardHeader className="bg-slate-50/40 border-b border-slate-100 pb-3.5 pt-5 px-5">
+              <CardTitle className="text-slate-900 text-sm font-bold flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-slate-800" /> Paso 2: Seleccionar Clases (Oferta Académica)
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-xs text-slate-500">
                 Explore las clases configuradas. El color indica el estado de cupos.
               </CardDescription>
             </CardHeader>
-            <CardContent className="p-6 bg-slate-50/30 flex-1 overflow-y-auto max-h-[620px]">
+            <CardContent className="p-5 sm:p-6 bg-slate-50/20 flex-1 overflow-y-auto max-h-[620px]">
               {courses.length === 0 ? (
-                <div className="py-20 text-center text-slate-500 font-semibold border-2 border-dashed border-slate-200 rounded-xl bg-white p-6">
-                  No hay clases en la oferta académica. Diríjase a &quot;Oferta Académica&quot; para configurar la grilla.
+                <div className="py-20 text-center text-slate-400 font-semibold border-2 border-dashed border-slate-200 rounded-2xl bg-white p-6">
+                  No hay clases en la oferta académica activa.
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -525,75 +537,73 @@ export default function MatriculasPage() {
                     const activeCount = getActiveEnrollmentsCount(c.id);
                     const spotsLeft = c.capacity - activeCount;
 
-                    // Semaforo logic
-                    let statusColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
-                    let statusText = `Disponible (${spotsLeft} de ${c.capacity} lugares)`;
+                    // Semaforo logic matching Image 2
+                    let statusColor = "bg-[#D1FAE5] text-[#059669] border-emerald-200";
+                    let statusText = `DISPONIBLE (${spotsLeft} DE ${c.capacity} LUGARES)`;
                     if (spotsLeft === 0) {
-                      statusColor = "bg-red-100 text-red-800 border-red-200";
-                      statusText = "Clase Llena (0 de vacantes)";
+                      statusColor = "bg-[#FEE2E2] text-[#DC2626] border-rose-200";
+                      statusText = "CLASE LLENA (0 VACANTES)";
                     } else if (spotsLeft <= 5) {
-                      statusColor = "bg-amber-100 text-amber-800 border-amber-200";
-                      statusText = `¡Últimos cupos! (${spotsLeft} de ${c.capacity})`;
+                      statusColor = "bg-[#FEF3C7] text-[#D97706] border-amber-200";
+                      statusText = `¡ÚLTIMOS CUPOS! (${spotsLeft} DE ${c.capacity})`;
                     }
 
                     const isCartDuplicate = cart.find(item => item.id === c.id);
 
                     return (
-                      <Card key={c.id} className="border border-slate-100 bg-white shadow-sm hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between">
-                        <CardContent className="p-4 space-y-3 flex-1 flex flex-col justify-between">
-                          <div className="space-y-1.5">
-                            <div className="flex justify-between items-start gap-2">
-                              <h4 className="font-extrabold text-slate-800 text-sm leading-snug">{c.name}</h4>
-                              <span className={`text-[9px] px-2 py-0.5 rounded-full font-bold border uppercase ${statusColor}`}>
-                                {statusText}
-                              </span>
-                            </div>
-                            <span className="inline-block px-1.5 py-0.5 bg-slate-100 text-slate-700 font-bold text-[9px] rounded uppercase mt-0.5">
+                      <Card key={c.id} className="border border-slate-200/80 bg-white rounded-2xl shadow-xs hover:shadow-md transition-all relative overflow-hidden flex flex-col justify-between p-4 space-y-3.5">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-start gap-2">
+                            <h4 className="font-extrabold text-slate-900 text-sm leading-snug">{c.name}</h4>
+                            <span className={`text-[9px] px-2.5 py-0.5 rounded-full font-bold border tracking-wider uppercase shrink-0 ${statusColor}`}>
+                              {statusText}
+                            </span>
+                          </div>
+                          <div>
+                            <span className="inline-block px-2 py-0.5 bg-[#F1F5F9] text-[#334155] font-bold text-[9px] rounded-md tracking-wider uppercase">
                               {c.level}
                             </span>
                           </div>
+                        </div>
 
-                          <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-2">
-                            {c.schedules?.map((s, idx) => (
-                              <div key={idx} className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
-                                <span className="flex items-center gap-1 font-semibold">
-                                  <Clock className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                                  {s.dayOfWeek} {s.startTime}–{s.endTime}
-                                </span>
-                                <span className="text-slate-300">·</span>
-                                <span className="flex items-center gap-1 font-semibold">
-                                  <MapPin className="h-3.5 w-3.5 text-slate-400 flex-shrink-0" />
-                                  {s.classroom}
-                                </span>
-                              </div>
-                            ))}
-                            <div className="flex items-center gap-2 pt-1.5 border-t border-slate-50">
-                              <User className="h-3.5 w-3.5 text-slate-400" />
-                              <span className="font-semibold text-slate-700">
-                                {c.teacher ? `${c.teacher.firstName} ${c.teacher.lastName}` : "Profesor por asignar"}
+                        <div className="space-y-1.5 text-xs text-slate-600 border-t border-slate-100 pt-2.5">
+                          {c.schedules?.map((s, idx) => (
+                            <div key={idx} className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
+                              <span className="flex items-center gap-1 font-medium text-slate-600">
+                                <Clock className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                {s.dayOfWeek} {s.startTime}–{s.endTime}
+                              </span>
+                              <span className="text-slate-300">·</span>
+                              <span className="flex items-center gap-1 font-medium text-slate-600">
+                                <MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                                {s.classroom}
                               </span>
                             </div>
+                          ))}
+                          <div className="flex items-center gap-1.5 pt-1.5 text-xs text-slate-600">
+                            <User className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                            <span className="font-medium">
+                              {c.teacher ? `${c.teacher.firstName} ${c.teacher.lastName}` : "Docente Jeroky"}
+                            </span>
                           </div>
+                        </div>
 
-                          <div className="pt-3 border-t border-slate-100 mt-2 flex gap-2">
+                        <div className="pt-2 border-t border-slate-100">
+                          {isCartDuplicate ? (
+                            <div className="w-full py-2.5 px-3 bg-[#EFF6FF] text-[#2C58A2] border border-[#BFDBFE] rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow-2xs">
+                              <Check className="h-4 w-4" /> Agregado
+                            </div>
+                          ) : (
                             <Button
                               onClick={() => addToCart(c)}
-                              disabled={!selectedStudent || spotsLeft === 0 || isCartDuplicate !== undefined}
+                              disabled={!selectedStudent || spotsLeft === 0}
                               size="sm"
-                              className={`w-full font-bold ${
-                                isCartDuplicate 
-                                  ? "bg-slate-100 text-slate-400 hover:bg-slate-100" 
-                                  : "bg-primary hover:bg-primary/95 text-primary-foreground"
-                              }`}
+                              className="w-full font-bold py-2.5 h-auto rounded-xl bg-[#2C58A2] hover:bg-[#224683] text-white text-xs shadow-xs"
                             >
-                              {isCartDuplicate ? (
-                                <span className="flex items-center gap-1"><Check className="h-3.5 w-3.5" /> Agregado</span>
-                              ) : (
-                                "Añadir a la matrícula"
-                              )}
+                              Añadir a la matrícula
                             </Button>
-                          </div>
-                        </CardContent>
+                          )}
+                        </div>
                       </Card>
                     );
                   })}
@@ -790,10 +800,10 @@ export default function MatriculasPage() {
           {receiptEnrollment && (
             <div className="flex flex-col bg-white">
               {/* Receipt Header */}
-              <div className="p-6 bg-slate-800 text-white text-center flex flex-col justify-center items-center relative">
+              <div className="p-6 bg-slate-900 text-white text-center flex flex-col justify-center items-center relative">
                 <GraduationCap className="h-10 w-10 mb-2 text-white" />
                 <h3 className="text-xl font-extrabold tracking-wider">JEROKY SOFT</h3>
-                <p className="text-[10px] uppercase font-bold tracking-widest text-slate-300 mt-0.5">Centro de Danzas Jeroky Paraguay</p>
+                <p className="text-[10px] uppercase font-bold tracking-widest text-[#38BDF8] mt-0.5">Academia de Danza Jeroky Paraguai</p>
                 <div className="absolute right-4 top-4 print:hidden">
                   <button 
                     onClick={() => setReceiptEnrollment(null)}
@@ -861,7 +871,7 @@ export default function MatriculasPage() {
                 </div>
 
                 <div className="mt-6 p-4 bg-slate-50 border border-slate-100 rounded-lg text-[10px] text-center text-slate-500 font-semibold space-y-1">
-                  <p>Este documento constituye un comprobante formal de la asignación académica en el Centro de Danzas Jeroky Paraguay.</p>
+                  <p>Este documento constituye un comprobante formal de la asignación académica en la Academia de Danza Jeroky Paraguai.</p>
                   <p className="font-mono text-slate-400">Huella digital de seguridad: {receiptEnrollment.id.substring(0,8)}-{receiptEnrollment.studentId.substring(0,4)}</p>
                 </div>
               </div>
@@ -886,14 +896,14 @@ export default function MatriculasPage() {
           {bulkReceiptEnrollments.length > 0 && (
             <div className="flex flex-col bg-white">
               {/* Header */}
-              <div className="p-6 bg-primary text-white text-center flex flex-col justify-center items-center relative">
+              <div className="p-6 bg-slate-900 text-white text-center flex flex-col justify-center items-center relative">
                 <GraduationCap className="h-10 w-10 mb-2 text-white" />
                 <h3 className="text-xl font-extrabold tracking-wider">JEROKY SOFT</h3>
-                <p className="text-[10px] uppercase font-bold tracking-widest text-primary-foreground/90 mt-0.5">Centro de Danzas Jeroky Paraguay</p>
+                <p className="text-[10px] uppercase font-bold tracking-widest text-[#38BDF8] mt-0.5">Academia de Danza Jeroky Paraguai</p>
                 <div className="absolute right-4 top-4 print:hidden">
                   <button 
                     onClick={() => setBulkReceiptEnrollments([])}
-                    className="p-1 hover:bg-primary/90 rounded-full transition-colors"
+                    className="p-1 hover:bg-slate-800 rounded-full transition-colors"
                   >
                     <X className="h-5 w-5 text-white" />
                   </button>
@@ -956,7 +966,7 @@ export default function MatriculasPage() {
                 </div>
 
                 <div className="mt-6 p-4 bg-slate-50 border border-slate-100 rounded-lg text-[10px] text-center text-slate-500 font-semibold space-y-1">
-                  <p>Este documento constituye un comprobante formal de la asignación académica en el Centro de Danzas Jeroky Paraguay.</p>
+                  <p>Este documento constituye un comprobante formal de la asignación académica en la Academia de Danza Jeroky Paraguai.</p>
                   <p className="font-mono text-slate-400">Huella digital del lote: {bulkReceiptEnrollments.map(e=>e.id.substring(0,4)).join("-")}</p>
                 </div>
               </div>

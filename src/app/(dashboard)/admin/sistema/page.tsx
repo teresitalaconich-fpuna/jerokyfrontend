@@ -119,7 +119,7 @@ export default function SistemaPage() {
         <Card className="lg:col-span-1 h-fit">
           <CardHeader>
             <div className="flex items-center gap-2">
-              <FileArchive className="h-6 w-6 text-accent" />
+              <FileArchive className="h-6 w-6 text-[#2C58A2]" />
               <CardTitle>Respaldos de Base de Datos</CardTitle>
             </div>
             <CardDescription>Resguarde el estado del sistema en archivos SQL estructurados.</CardDescription>
@@ -156,7 +156,7 @@ export default function SistemaPage() {
               <Button 
                 onClick={() => setIsBackupModalOpen(true)}
                 disabled={backupLoading}
-                className="w-full bg-accent hover:bg-accent/90 text-white font-bold"
+                className="w-full bg-[#2C58A2] hover:bg-[#224683] text-white font-bold rounded-xl shadow-xs"
               >
                 GENERAR BACKUP MANUAL
               </Button>

@@ -34,8 +34,8 @@
 }
 
 :root {
-  --background: 210 20% 98%;      /* Light clean gray-blue base */
-  --foreground: 222 47% 11%;
+  --background: 210 40% 98%;       /* Light clean gray-blue base #F8FAFC */
+  --foreground: 222 47% 11%;       /* Slate 900 #0F172A */
   
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
@@ -43,16 +43,16 @@
   --popover: 0 0% 100%;
   --popover-foreground: 222 47% 11%;
   
-  --primary: 222 47% 11%;          /* Navy / Dark Blue Accent */
-  --primary-foreground: 210 40% 98%;
+  --primary: 218 57% 40%;          /* Jeroky Royal Blue #2C58A2 */
+  --primary-foreground: 0 0% 100%;
   
-  --secondary: 210 40% 96.1%;
-  --secondary-foreground: 222 47% 11.2%;
+  --secondary: 214 32% 96%;        /* Slate 100 */
+  --secondary-foreground: 222 47% 11%;
   
   --muted: 210 40% 96.1%;
   --muted-foreground: 215.4 16.3% 46.9%;
   
-  --accent: 24 95% 53%;            /* Warm Coral/Orange Accent */
+  --accent: 218 57% 40%;           /* Jeroky Royal Blue Accent */
   --accent-foreground: 0 0% 100%;
   
   --destructive: 0 84.2% 60.2%;
@@ -60,8 +60,8 @@
   
   --border: 214.3 31.8% 91.4%;
   --input: 214.3 31.8% 91.4%;
-  --ring: 222.2 84% 4.9%;
-  --radius: 0.5rem;
+  --ring: 218 57% 40%;
+  --radius: 0.625rem;
 }
 
 body {

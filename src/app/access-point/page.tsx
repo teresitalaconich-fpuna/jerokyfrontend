@@ -319,7 +319,7 @@ export default function AccessPointPage() {
   return (
     <div className="relative min-h-screen bg-slate-950 text-white flex flex-col justify-between font-sans select-none">
       {/* Top Header Bar */}
-      <header className="flex items-center justify-between px-6 py-3.5 bg-slate-900/80 backdrop-blur-md border-b border-slate-800 z-10">
+      <header className="flex items-center justify-between px-6 py-3.5 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 z-10">
         <Link
           href="/alumnos"
           className="flex items-center gap-2 text-slate-400 hover:text-white transition-colors"
@@ -330,16 +330,16 @@ export default function AccessPointPage() {
 
         {/* Center Institutional Branding & Live Clock */}
         <div className="text-center flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-800/80 rounded-full border border-slate-700 text-xs font-mono font-bold text-accent shadow-inner">
+          <div className="hidden sm:flex items-center gap-1.5 px-3 py-1 bg-slate-800/90 rounded-full border border-slate-700 text-xs font-mono font-bold text-[#38BDF8] shadow-inner">
             <Clock className="h-3.5 w-3.5" />
             <span>{currentTime || "00:00:00"}</span>
           </div>
           <div>
-            <h1 className="font-extrabold tracking-wider text-sm text-slate-200">
+            <h1 className="font-extrabold tracking-wider text-sm text-slate-100">
               PUNTO DE ACCESO BIOMÉTRICO
             </h1>
-            <p className="text-[10px] text-accent font-bold tracking-widest">
-              CONTROL DE ASISTENCIA FACIAL
+            <p className="text-[10px] text-[#38BDF8] font-bold tracking-widest uppercase">
+              ACADEMIA DE DANZA JEROKY PARAGUAI
             </p>
           </div>
         </div>
@@ -369,15 +369,15 @@ export default function AccessPointPage() {
           </button>
 
           {/* Tab Selector */}
-          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-lg border border-slate-800">
+          <div className="flex items-center gap-1 bg-slate-900 p-1 rounded-xl border border-slate-800">
             <button
               onClick={() => {
                 setActiveTab("biometric");
                 setAlert({ type: null, message: "" });
               }}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                 activeTab === "biometric"
-                  ? "bg-accent text-white shadow-md"
+                  ? "bg-[#2C58A2] text-white shadow-md"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -389,9 +389,9 @@ export default function AccessPointPage() {
                 setActiveTab("document");
                 setAlert({ type: null, message: "" });
               }}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                 activeTab === "document"
-                  ? "bg-accent text-white shadow-md"
+                  ? "bg-[#2C58A2] text-white shadow-md"
                   : "text-slate-400 hover:text-white"
               }`}
             >
@@ -439,7 +439,7 @@ export default function AccessPointPage() {
                           ? "bg-blue-400 animate-ping"
                           : detectionState === "locking"
                           ? "bg-amber-400"
-                          : "bg-accent animate-pulse"
+                          : "bg-[#38BDF8] animate-pulse"
                       }`}
                     />
                     {detectionState === "cooldown"
@@ -472,8 +472,8 @@ export default function AccessPointPage() {
                     detectionState === "locking"
                       ? "border-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)]"
                       : detectionState === "processing"
-                      ? "border-blue-400 shadow-[0_0_35px_rgba(96,165,250,0.8)]"
-                      : "border-accent/70 shadow-[0_0_15px_rgba(249,115,22,0.4)]"
+                      ? "border-[#38BDF8] shadow-[0_0_35px_rgba(56,189,248,0.8)]"
+                      : "border-[#38BDF8]/70 shadow-[0_0_15px_rgba(56,189,248,0.4)]"
                   }`}
                   style={{
                     // Mirrored calculation because webcam has scale-x-[-1]
@@ -491,18 +491,18 @@ export default function AccessPointPage() {
                 </div>
               )}
 
-              {/* Target Viewfinder & Guidance Overlay */}
-              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-6 z-0">
-                {/* Target Oval Frame Brackets */}
+              {/* Central Futuristic Scanning HUD */}
+              <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center p-4">
+                {/* Oval/Target Guide */}
                 <div
-                  className={`relative w-64 h-80 rounded-3xl transition-all duration-300 flex flex-col justify-between p-3 ${
+                  className={`relative w-56 h-72 sm:w-64 sm:h-80 rounded-[45%] flex flex-col justify-between p-3 transition-all duration-300 ${
                     detectionState === "locking"
-                      ? "border-2 border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.4)] scale-102"
+                      ? "border-2 border-amber-400 shadow-[0_0_30px_rgba(251,191,36,0.5)] scale-102"
                       : detectionState === "processing"
-                      ? "border-2 border-blue-400 shadow-[0_0_40px_rgba(96,165,250,0.6)] scale-100"
+                      ? "border-2 border-[#38BDF8] shadow-[0_0_40px_rgba(56,189,248,0.7)] scale-100"
                       : detectionState === "cooldown"
                       ? "border-2 border-emerald-400 shadow-[0_0_30px_rgba(52,211,153,0.4)]"
-                      : "border border-white/20"
+                      : "border-2 border-[#38BDF8]/60 shadow-[0_0_20px_rgba(56,189,248,0.3)]"
                   }`}
                 >
                   {/* Four Corner Brackets */}
@@ -513,7 +513,7 @@ export default function AccessPointPage() {
                           ? "border-amber-400"
                           : detectionState === "cooldown"
                           ? "border-emerald-400"
-                          : "border-accent"
+                          : "border-[#38BDF8]"
                       }`}
                     />
                     <div
@@ -522,7 +522,7 @@ export default function AccessPointPage() {
                           ? "border-amber-400"
                           : detectionState === "cooldown"
                           ? "border-emerald-400"
-                          : "border-accent"
+                          : "border-[#38BDF8]"
                       }`}
                     />
                   </div>
@@ -544,7 +544,7 @@ export default function AccessPointPage() {
 
                   {/* Scanning Laser Beam (idle state) */}
                   {detectionState === "idle" && (
-                    <div className="w-full h-0.5 bg-accent shadow-[0_0_15px_#f97316] animate-pulse" />
+                    <div className="w-full h-0.5 bg-[#38BDF8] shadow-[0_0_20px_#38bdf8] animate-pulse" />
                   )}
 
                   <div className="flex justify-between">
@@ -554,7 +554,7 @@ export default function AccessPointPage() {
                           ? "border-amber-400"
                           : detectionState === "cooldown"
                           ? "border-emerald-400"
-                          : "border-accent"
+                          : "border-[#38BDF8]"
                       }`}
                     />
                     <div
@@ -563,31 +563,25 @@ export default function AccessPointPage() {
                           ? "border-amber-400"
                           : detectionState === "cooldown"
                           ? "border-emerald-400"
-                          : "border-accent"
+                          : "border-[#38BDF8]"
                       }`}
                     />
                   </div>
                 </div>
-
-                {/* Dynamic Helper Text */}
-                <p className="mt-4 text-xs font-medium text-slate-200 bg-black/70 px-4 py-1.5 rounded-full backdrop-blur-md border border-white/10 shadow-lg">
-                  {guidanceMessage}
-                </p>
               </div>
             </div>
           ) : (
             /* Contingency Document View */
             <div className="w-full py-8 px-6 bg-slate-900/90 flex flex-col items-center justify-center space-y-5">
               <div className="text-center space-y-1">
-                <div className="inline-flex p-3 bg-accent/10 text-accent rounded-full mb-1">
+                <div className="inline-flex p-3 bg-[#2C58A2]/20 text-[#38BDF8] rounded-full mb-1 border border-[#2C58A2]/30">
                   <CreditCard className="h-8 w-8" />
                 </div>
                 <h2 className="text-xl font-bold text-slate-100">
                   Marcación por Cédula de Identidad
                 </h2>
                 <p className="text-xs text-slate-400">
-                  Ingrese su número de C.I. mediante el teclado o con el teclado numérico en
-                  pantalla.
+                  Ingrese su número de C.I. mediante el teclado o con el teclado numérico en pantalla.
                 </p>
               </div>
 
@@ -601,7 +595,7 @@ export default function AccessPointPage() {
                   value={ciInput}
                   onChange={(e) => setCiInput(e.target.value)}
                   onKeyDown={handleKeyDown}
-                  className="w-full px-4 py-3 bg-slate-950 border-2 border-accent/60 rounded-lg text-center font-mono text-2xl font-bold tracking-widest text-amber-400 placeholder:text-slate-600 focus:outline-none focus:border-accent shadow-inner"
+                  className="w-full px-4 py-3 bg-slate-950 border-2 border-[#2C58A2] rounded-xl text-center font-mono text-2xl font-bold tracking-widest text-white placeholder:text-slate-600 focus:outline-none focus:border-[#38BDF8] focus:ring-2 focus:ring-[#38BDF8]/20 shadow-inner"
                   autoFocus
                 />
                 {ciInput && (
@@ -623,26 +617,26 @@ export default function AccessPointPage() {
                   <button
                     key={num}
                     onClick={() => handleNumpadPress(num)}
-                    className="py-3 bg-slate-800 hover:bg-slate-700 active:bg-accent text-xl font-bold rounded-lg transition-colors text-slate-100 shadow"
+                    className="py-3 bg-slate-800 hover:bg-slate-700 active:bg-[#2C58A2] text-xl font-bold rounded-xl transition-colors text-slate-100 shadow-xs"
                   >
                     {num}
                   </button>
                 ))}
                 <button
                   onClick={() => handleNumpadPress("clear")}
-                  className="py-3 bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-bold rounded-lg transition-colors border border-red-800/40"
+                  className="py-3 bg-red-950/60 hover:bg-red-900 text-red-300 text-xs font-bold rounded-xl transition-colors border border-red-800/40"
                 >
                   Limpiar
                 </button>
                 <button
                   onClick={() => handleNumpadPress("0")}
-                  className="py-3 bg-slate-800 hover:bg-slate-700 active:bg-accent text-xl font-bold rounded-lg transition-colors text-slate-100 shadow"
+                  className="py-3 bg-slate-800 hover:bg-slate-700 active:bg-[#2C58A2] text-xl font-bold rounded-xl transition-colors text-slate-100 shadow-xs"
                 >
                   0
                 </button>
                 <button
                   onClick={() => handleNumpadPress("backspace")}
-                  className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center rounded-lg transition-colors"
+                  className="py-3 bg-slate-800 hover:bg-slate-700 text-slate-300 flex items-center justify-center rounded-xl transition-colors"
                 >
                   <Delete className="h-5 w-5" />
                 </button>
@@ -653,7 +647,7 @@ export default function AccessPointPage() {
           {/* Loading Indicator Overlay */}
           {loading && (
             <div className="absolute inset-0 bg-slate-950/85 backdrop-blur-xs flex flex-col items-center justify-center gap-3 z-30 animate-in fade-in">
-              <RefreshCw className="h-12 w-12 text-accent animate-spin" />
+              <RefreshCw className="h-12 w-12 text-[#38BDF8] animate-spin" />
               <p className="text-base font-bold tracking-wide text-slate-100">
                 {activeTab === "biometric"
                   ? "Verificando identidad de alumno..."
@@ -698,7 +692,7 @@ export default function AccessPointPage() {
                       <p className="col-span-2 mt-1">
                         <span className="text-slate-400 text-xs">Curso / Clase:</span>
                         <br />
-                        <strong className="text-amber-300">{alert.courseName}</strong>
+                        <strong className="text-sky-300">{alert.courseName}</strong>
                       </p>
                     )}
                     <p className="col-span-2 mt-1 flex items-center gap-2">
@@ -706,8 +700,8 @@ export default function AccessPointPage() {
                       <span
                         className={`inline-block px-3 py-1 text-xs font-black rounded-md uppercase tracking-wider ${
                           alert.checkType === "Entrada"
-                            ? "bg-blue-600 text-white"
-                            : "bg-orange-600 text-white"
+                            ? "bg-[#2C58A2] text-white"
+                            : "bg-emerald-600 text-white"
                         }`}
                       >
                         {alert.checkType}
@@ -737,11 +731,11 @@ export default function AccessPointPage() {
                 {isAutoMode ? "Modo Automático: ACTIVO" : "Modo Automático: DESACTIVADO"}
               </button>
 
-              {/* Manual Click Button (Fallback or when auto mode is off) */}
+              {/* Manual Click Button */}
               <Button
                 onClick={() => captureBiometric()}
                 disabled={loading || cooldownRemaining > 0}
-                className="px-6 py-5 rounded-full bg-accent hover:bg-accent/90 text-white font-bold flex items-center gap-2 shadow-lg hover:shadow-accent/35 text-sm"
+                className="px-6 py-5 rounded-full bg-[#2C58A2] hover:bg-[#224683] text-white font-bold flex items-center gap-2 shadow-lg hover:shadow-[#2C58A2]/35 text-sm"
               >
                 <Camera className="h-4 w-4" />
                 {loading ? "Reconociendo..." : "Marcar con Clic"}
@@ -752,7 +746,7 @@ export default function AccessPointPage() {
                 variant="outline"
                 className="px-5 py-5 rounded-full bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-300 font-semibold flex items-center gap-2 text-sm"
               >
-                <CreditCard className="h-4 w-4 text-amber-400" />
+                <CreditCard className="h-4 w-4 text-sky-400" />
                 Contingencia (C.I.)
               </Button>
             </>
@@ -761,7 +755,7 @@ export default function AccessPointPage() {
               <Button
                 onClick={() => handleDocumentSubmit()}
                 disabled={loading || !ciInput.trim()}
-                className="px-8 py-5 rounded-full bg-accent hover:bg-accent/90 text-white font-bold flex items-center gap-2 shadow-lg hover:shadow-accent/35 text-sm"
+                className="px-8 py-5 rounded-full bg-[#2C58A2] hover:bg-[#224683] text-white font-bold flex items-center gap-2 shadow-lg hover:shadow-[#2C58A2]/35 text-sm"
               >
                 <Send className="h-4 w-4" />
                 {loading ? "Registrando..." : "Enviar Asistencia (C.I.)"}
@@ -771,7 +765,7 @@ export default function AccessPointPage() {
                 variant="outline"
                 className="px-5 py-5 rounded-full bg-slate-900 border-slate-800 hover:bg-slate-800 text-slate-300 font-semibold flex items-center gap-2 text-sm"
               >
-                <Camera className="h-4 w-4 text-blue-400" />
+                <Camera className="h-4 w-4 text-sky-400" />
                 Volver a Reconocimiento Facial
               </Button>
             </>

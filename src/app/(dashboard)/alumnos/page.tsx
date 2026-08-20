@@ -324,11 +324,11 @@ export default function AlumnosPage() {
                           <Button
                             size="sm"
                             variant="outline"
-                            className="h-8 px-2.5 flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border-accent/30 bg-accent/5"
+                            className="h-8 px-2.5 flex items-center gap-1 text-xs font-bold text-[#2C58A2] hover:text-[#2C58A2] hover:bg-blue-50 border-blue-200 bg-blue-50/50 rounded-lg"
                             onClick={() => setEnrollingStudent(student)}
                             title="Capturar o Gestionar Rostro Biométrico"
                           >
-                            <Camera className="h-3.5 w-3.5 text-accent" /> Rostro
+                            <Camera className="h-3.5 w-3.5 text-[#2C58A2]" /> Rostro
                           </Button>
                           <Link href={`/historial/${student.id}`}>
                             <Button size="sm" variant="outline" className="h-8 px-2.5 flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white" title="Ver Ficha y Legajo Académico">
