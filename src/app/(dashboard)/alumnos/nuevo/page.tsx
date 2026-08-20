@@ -9,6 +9,16 @@ import { Label } from "../../../../components/ui/label";
 import { Checkbox } from "../../../../components/ui/checkbox";
 import { Select } from "../../../../components/ui/select";
 import { fetchApi, ensureAuth } from "../../../../lib/api";
+import { Camera, CheckCircle2, ArrowRight } from "lucide-react";
+import FaceEnrollmentModal from "../../../../components/biometrics/FaceEnrollmentModal";
+
+interface CreatedStudent {
+  id: string;
+  firstName: string;
+  lastName: string;
+  ci: string;
+  biometricTemplateId?: string | null;
+}
 
 interface TutorOption {
   id: string;
@@ -43,6 +53,8 @@ export default function NuevoAlumnoPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
+  const [createdStudent, setCreatedStudent] = useState<CreatedStudent | null>(null);
+  const [showFaceModal, setShowFaceModal] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -157,12 +169,14 @@ export default function NuevoAlumnoPage() {
           : {}),
       };
 
-      await fetchApi("/students", {
+      const created = await fetchApi<CreatedStudent>("/students", {
         method: "POST",
         body: JSON.stringify(payload),
       });
 
       setSuccess("¡Estudiante registrado correctamente!");
+      setCreatedStudent(created);
+
       // Reset form
       setFirstName("");
       setLastName("");
@@ -175,10 +189,6 @@ export default function NuevoAlumnoPage() {
       setTutorCi("");
       setTutorPhone("");
       setTutorEmail("");
-      
-      setTimeout(() => {
-        router.push("/alumnos");
-      }, 2000);
 
     } catch (err) {
       const message = err instanceof Error ? err.message : "Error al guardar el registro";
@@ -410,6 +420,61 @@ export default function NuevoAlumnoPage() {
           </CardFooter>
         </form>
       </Card>
+
+      {/* Post-Registration Action Dialog */}
+      {createdStudent && !showFaceModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4 animate-in fade-in">
+          <Card className="w-full max-w-md shadow-2xl bg-white border-2 border-emerald-500 overflow-hidden">
+            <CardHeader className="bg-emerald-50 text-center pb-4 border-b border-emerald-100">
+              <div className="mx-auto w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-2">
+                <CheckCircle2 className="h-7 w-7" />
+              </div>
+              <CardTitle className="text-xl font-bold text-slate-900">
+                ¡Alumno Registrado con Éxito!
+              </CardTitle>
+              <CardDescription className="text-slate-600 text-xs">
+                {createdStudent.firstName} {createdStudent.lastName} (CI: {createdStudent.ci})
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-6 space-y-4 text-center">
+              <p className="text-sm text-slate-700 leading-relaxed">
+                Para habilitar la asistencia automática en el punto de acceso, capture una muestra del rostro del alumno.
+              </p>
+              <div className="flex flex-col gap-2.5 pt-2">
+                <Button
+                  onClick={() => setShowFaceModal(true)}
+                  className="w-full py-6 font-bold text-sm bg-accent hover:bg-accent/90 text-white flex items-center justify-center gap-2 shadow-md"
+                >
+                  <Camera className="h-5 w-5" /> Capturar Rostro con Cámara Ahora
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push("/alumnos")}
+                  className="w-full text-slate-600 hover:text-slate-900 flex items-center justify-center gap-1.5 text-xs"
+                >
+                  Ir al Listado de Alumnos <ArrowRight className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Face Enrollment Modal */}
+      {createdStudent && (
+        <FaceEnrollmentModal
+          student={createdStudent}
+          isOpen={showFaceModal}
+          onClose={() => {
+            setShowFaceModal(false);
+            router.push("/alumnos");
+          }}
+          onFaceUpdated={() => {
+            setShowFaceModal(false);
+            router.push("/alumnos");
+          }}
+        />
+      )}
     </div>
   );
 }

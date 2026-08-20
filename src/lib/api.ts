@@ -267,5 +267,46 @@ export async function deleteAttendance(id: string): Promise<{ success: boolean; 
   });
 }
 
+export interface IRegisterFaceResponse {
+  student: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    ci: string;
+    biometricTemplateId?: string | null;
+    biometricConsent?: boolean;
+    status?: string;
+  };
+  face: {
+    faceId: string;
+    imageId: string;
+    confidence?: number;
+    boundingBox?: {
+      Width?: number;
+      Height?: number;
+      Left?: number;
+      Top?: number;
+    };
+  };
+}
+
+export async function registerStudentFace(
+  studentId: string,
+  imageBase64: string,
+): Promise<IRegisterFaceResponse> {
+  return fetchApi<IRegisterFaceResponse>(`/students/${studentId}/face`, {
+    method: 'POST',
+    body: JSON.stringify({ image: imageBase64 }),
+  });
+}
+
+export async function deleteStudentFace(
+  studentId: string,
+): Promise<{ success: boolean; message: string }> {
+  return fetchApi<{ success: boolean; message: string }>(`/students/${studentId}/face`, {
+    method: 'DELETE',
+  });
+}
+
 
 

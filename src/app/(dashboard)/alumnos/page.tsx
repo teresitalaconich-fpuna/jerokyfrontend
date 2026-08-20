@@ -16,7 +16,8 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
 import { fetchApi, ensureAuth } from "../../../lib/api";
-import { Plus, Search, FileText, Edit, Power, X, User, Phone, ShieldCheck } from "lucide-react";
+import { Plus, Search, FileText, Edit, Power, X, User, Phone, ShieldCheck, Camera, CheckCircle2, AlertCircle } from "lucide-react";
+import FaceEnrollmentModal from "../../../components/biometrics/FaceEnrollmentModal";
 
 interface StudentData {
   id: string;
@@ -55,6 +56,7 @@ export default function AlumnosPage() {
   const [students, setStudents] = useState<StudentData[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [enrollingStudent, setEnrollingStudent] = useState<StudentData | null>(null);
 
   // Edit Modal State
   const [editingStudent, setEditingStudent] = useState<StudentData | null>(null);
@@ -263,6 +265,7 @@ export default function AlumnosPage() {
                   <TableHead>Cédula (CI)</TableHead>
                   <TableHead>Fecha de Nacimiento</TableHead>
                   <TableHead>Estado</TableHead>
+                  <TableHead>Biometría Facial</TableHead>
                   <TableHead>Tutor / Responsable Legal</TableHead>
                   <TableHead className="text-right">Acciones</TableHead>
                 </TableRow>
@@ -270,6 +273,7 @@ export default function AlumnosPage() {
               <TableBody>
                 {filteredStudents.map((student) => {
                   const isActive = student.status !== "inactive";
+                  const hasFace = Boolean(student.biometricTemplateId);
                   return (
                     <TableRow key={student.id} className={!isActive ? "opacity-60 bg-slate-50/50" : ""}>
                       <TableCell className="font-semibold text-slate-800">
@@ -283,6 +287,17 @@ export default function AlumnosPage() {
                         }`}>
                           {isActive ? "Activo" : "Inactivo"}
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        {hasFace ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Registrado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200">
+                            <AlertCircle className="h-3 w-3 text-slate-400" /> Sin Rostro
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell>
                         {student.tutor ? (
@@ -306,6 +321,15 @@ export default function AlumnosPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1.5">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-8 px-2.5 flex items-center gap-1 text-xs font-semibold text-accent hover:text-accent hover:bg-accent/10 border-accent/30 bg-accent/5"
+                            onClick={() => setEnrollingStudent(student)}
+                            title="Capturar o Gestionar Rostro Biométrico"
+                          >
+                            <Camera className="h-3.5 w-3.5 text-accent" /> Rostro
+                          </Button>
                           <Link href={`/historial/${student.id}`}>
                             <Button size="sm" variant="outline" className="h-8 px-2.5 flex items-center gap-1 text-xs font-medium text-slate-700 hover:text-slate-900 bg-white" title="Ver Ficha y Legajo Académico">
                               <FileText className="h-3.5 w-3.5 text-primary" /> Ver Ficha
@@ -552,6 +576,14 @@ export default function AlumnosPage() {
           </Card>
         </div>
       )}
+
+      {/* Face Enrollment Modal */}
+      <FaceEnrollmentModal
+        student={enrollingStudent}
+        isOpen={Boolean(enrollingStudent)}
+        onClose={() => setEnrollingStudent(null)}
+        onFaceUpdated={loadStudents}
+      />
     </div>
   );
 }

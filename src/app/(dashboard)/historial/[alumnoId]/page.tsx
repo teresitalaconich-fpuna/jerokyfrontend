@@ -16,8 +16,10 @@ import {
   User, 
   Phone, 
   Layers, 
-  AlertCircle
+  AlertCircle,
+  Camera
 } from "lucide-react";
+import FaceEnrollmentModal from "../../../../components/biometrics/FaceEnrollmentModal";
 
 interface TutorInfo {
   id?: string;
@@ -152,6 +154,17 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
   const [grades, setGrades] = useState<GradeRecord[]>([]);
   const [enrollments, setEnrollments] = useState<EnrollmentInfo[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showFaceModal, setShowFaceModal] = useState(false);
+
+  const refreshStudent = React.useCallback(async () => {
+    if (!studentId) return;
+    try {
+      const data = await fetchApi<StudentInfo>(`/students/${studentId}`);
+      if (data) setStudent(data);
+    } catch {
+      // ignore
+    }
+  }, [studentId]);
 
   useEffect(() => {
     let active = true;
@@ -370,6 +383,27 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
                           {student.status || "Activo"}
                         </span>
                       </span>
+                      <span className="flex items-center gap-1.5">
+                        <strong className="text-slate-800">Biometría:</strong>
+                        {student.biometricTemplateId ? (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                            <CheckCircle2 className="h-3 w-3 text-emerald-600" /> Rostro Registrado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-amber-100 text-amber-800">
+                            <AlertCircle className="h-3 w-3 text-amber-600" /> Sin Rostro
+                          </span>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setShowFaceModal(true)}
+                          className="h-6 px-2 text-[11px] font-bold text-accent border-accent/40 hover:bg-accent/10 ml-1 print:hidden"
+                        >
+                          <Camera className="h-3 w-3 mr-1" />
+                          {student.biometricTemplateId ? "Actualizar Rostro" : "Capturar Rostro"}
+                        </Button>
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -567,6 +601,16 @@ export default function HistorialAlumnoPage({ params }: PageProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Face Enrollment Modal */}
+      {student && (
+        <FaceEnrollmentModal
+          student={student}
+          isOpen={showFaceModal}
+          onClose={() => setShowFaceModal(false)}
+          onFaceUpdated={refreshStudent}
+        />
+      )}
     </div>
   );
 }
