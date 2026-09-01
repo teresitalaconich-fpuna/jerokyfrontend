@@ -163,16 +163,7 @@ export default function DashboardLayout({
           })}
         </nav>
 
-        {/* Access point terminal link at bottom of sidebar */}
-        <div className="p-3 border-t border-slate-100 bg-slate-50/60">
-          <Link
-            href="/access-point"
-            className="flex items-center justify-center gap-2 w-full px-3.5 py-2.5 bg-[#2C58A2] hover:bg-[#224683] text-white text-xs font-bold rounded-xl shadow-xs transition-all"
-          >
-            <Camera className="h-4 w-4" />
-            Punto de Acceso Biométrico
-          </Link>
-        </div>
+
       </aside>
 
       {/* Mobile Drawer (Off-Canvas Navigation Menu) */}
@@ -249,14 +240,7 @@ export default function DashboardLayout({
 
             {/* Drawer Bottom Actions */}
             <div className="p-3 border-t border-slate-100 bg-slate-50/80 space-y-2">
-              <Link
-                href="/access-point"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center justify-center gap-2 w-full px-3.5 py-2.5 bg-[#2C58A2] hover:bg-[#224683] text-white text-xs font-bold rounded-xl shadow-xs transition-all"
-              >
-                <Camera className="h-4 w-4" />
-                Punto Biométrico
-              </Link>
+
               <button
                 type="button"
                 onClick={() => {
