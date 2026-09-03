@@ -249,7 +249,7 @@ export default function AlumnosPage() {
         </div>
         <Link href="/alumnos/nuevo">
           <Button className="flex items-center gap-2 font-semibold shadow-sm">
-            <Plus className="h-4 w-4" /> Nuevo Alumno
+            <Plus className="h-4 w-4" /> Nuevos Alumnos
           </Button>
         </Link>
       </div>

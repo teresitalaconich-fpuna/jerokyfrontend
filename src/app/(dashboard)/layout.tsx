@@ -341,7 +341,40 @@ export default function DashboardLayout({
         {/* Content View */}
         <main className="flex-1 overflow-y-auto p-3.5 sm:p-6 md:p-8 bg-[#F8FAFC]">
           <div className="max-w-7xl mx-auto space-y-6">
-            {children}
+            {(() => {
+              // Check if current route is outside the Alumnos module
+              const isAlumnosModule = pathname.startsWith("/alumnos") || pathname.startsWith("/historial");
+              if (!isAlumnosModule) {
+                const currentNavItem = navigation.find(
+                  (item) => pathname === item.href || (item.href !== "/" && pathname.startsWith(`${item.href}/`))
+                );
+                const title = currentNavItem ? currentNavItem.name : "Módulo";
+                return (
+                  <div className="space-y-6 animate-in fade-in duration-150">
+                    <div>
+                      <h1 className="text-3xl font-bold text-slate-800">{title}</h1>
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Estructura base del módulo institucional.
+                      </p>
+                    </div>
+                    <div className="min-h-[420px] rounded-2xl border border-dashed border-slate-300 bg-white/80 p-12 flex flex-col items-center justify-center text-center shadow-xs">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+                        {currentNavItem ? (
+                          <currentNavItem.icon className="h-7 w-7 text-slate-400" />
+                        ) : (
+                          <Users className="h-7 w-7 text-slate-400" />
+                        )}
+                      </div>
+                      <h3 className="text-base font-semibold text-slate-700">{title}</h3>
+                      <p className="text-xs text-slate-400 mt-1 max-w-sm">
+                        En construccion
+                      </p>
+                    </div>
+                  </div>
+                );
+              }
+              return children;
+            })()}
           </div>
         </main>
       </div>
