@@ -207,7 +207,7 @@ export default function NuevoAlumnoPage() {
             Ingrese los datos personales del alumno para el proceso de inscripción.
           </CardDescription>
         </CardHeader>
-        <form onSubmit={(e) => e.preventDefault()}>
+        <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {errors.global && (
               <div className="p-3 text-sm text-destructive-foreground bg-destructive/15 rounded-lg border border-destructive">
@@ -414,12 +414,8 @@ export default function NuevoAlumnoPage() {
             >
               Cancelar
             </Button>
-            <Button
-              type="button"
-              variant="default"
-              onClick={() => {}}
-            >
-              Cargar
+            <Button type="submit" disabled={loading}>
+              {loading ? "Registrando..." : "Guardar Alumno"}
             </Button>
           </CardFooter>
         </form>
